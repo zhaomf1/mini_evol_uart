@@ -49,6 +49,11 @@ void MX_TIM2_Init(void);
 void MX_TIM3_Init(void);
 void MX_TIM4_Init(void);
 
+void TIM1_Init(uint16_t Speed_1);
+void TIM2_Init(uint16_t Speed_1);
+void TIM3_Init(uint16_t Speed_1);
+void TIM4_Init(uint16_t Speed_1);
+
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* USER CODE BEGIN Prototypes */

@@ -1,4 +1,4 @@
-mini_evol\freertos.o: ..\Core\Src\peripheral\freertos.c
+mini_evol\freertos.o: ..\Core\Src\app\freertos.c
 mini_evol\freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
 mini_evol\freertos.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
 mini_evol\freertos.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
