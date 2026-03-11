@@ -27,6 +27,9 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os2.h"
+
+
 
 /* USER CODE BEGIN Includes */
 
@@ -42,6 +45,12 @@ extern UART_HandleTypeDef huart3;
 
 extern UART_HandleTypeDef huart6;
 
+// 声明接收完成信号量
+extern osSemaphoreId_t modbus_rx_sem;
+
+// 声明接收缓冲区和长度，方便 Modbus 层访问
+extern volatile uint16_t modbus_rx_len;
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
@@ -54,6 +63,10 @@ void MX_USART6_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 void uart_dma_init(void);
+int rs485_transmit(uint8_t *data, uint16_t len, uint32_t timeout);
+int rs485_receive(uint8_t *data, uint16_t len, uint32_t timeout);
+void modbus_create_rx_semaphore(void);
+
 
 /* USER CODE END Prototypes */
 

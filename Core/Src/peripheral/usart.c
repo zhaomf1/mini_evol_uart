@@ -24,8 +24,10 @@
 #include "main.h"
 
 /* USER CODE BEGIN 0 */
-uint8_t pc_rx_buffer[UART_BUFFER_SIZE], pc_rx_backup[UART_BUFFER_SIZE];              // 串口3
-uint8_t modbus_rtu_rx_buf[UART_BUFFER_SIZE], modbus_rtu_rx_backup[UART_BUFFER_SIZE]; // 串口3
+uint8_t pc_rx_buffer[UART_BUFFER_SIZE], pc_rx_backup[UART_BUFFER_SIZE];              // 串口1
+uint8_t modbus_rtu_rx_buf[128]; // 串口3
+volatile uint16_t modbus_rx_len = 0;            //备份数据长度，其他函数调用，防止中断更改
+
 
 /* USER CODE END 0 */
 
@@ -661,7 +663,6 @@ int fputc(int ch, FILE *f)
 
 /**
  * @brief 初始化UART的DMA接收功能
- * 该函数为三个不同的UART外设(UART3、UART4、UART6)配置DMA接收模式，
  * 并启用空闲中断(IDLE)检测，用于处理不定长数据的接收
  */
 void uart_dma_init(void)
@@ -672,7 +673,25 @@ void uart_dma_init(void)
     __HAL_UART_ENABLE_IT(&huart3, UART_IT_IDLE);
     HAL_UART_Receive_DMA(&huart3, modbus_rtu_rx_buf, UART_BUFFER_SIZE);
 
-    // __HAL_UART_ENABLE_IT(&huart2, UART_IT_IDLE);
 }
+
+/**
+ * @brief 485串口发送
+ */
+int rs485_transmit(uint8_t *data, uint16_t len, uint32_t timeout)
+{
+    HAL_StatusTypeDef status = HAL_UART_Transmit(&huart3, data, len, timeout);
+    return (status == HAL_OK) ? 0 : -1;
+}
+
+/**
+ * @brief 485串口接收
+ */
+int rs485_receive(uint8_t *data, uint16_t len, uint32_t timeout)
+{
+    return (HAL_UART_Receive(&huart3, data, len, timeout) == HAL_OK) ? 0 : -1;
+}
+
+
 
 /* USER CODE END 1 */

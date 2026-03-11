@@ -22,6 +22,7 @@
 #include "stm32f4xx_it.h"
 #include <stdio.h>
 #include <string.h>
+#include "usart.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
@@ -343,7 +344,7 @@ void USART1_IRQHandler(void)
         memcpy(pc_rx_backup, pc_rx_buffer, COUNTER); // 数据转存到rx_buffer
         for(int i = 0; i < COUNTER; i++)
         {
-            printf("%02X", pc_rx_backup[i]);
+            printf("%02X ", pc_rx_backup[i]);
         }
         printf("\r\n");
 
@@ -389,14 +390,12 @@ void USART3_IRQHandler(void)
         HAL_UART_DMAStop(&huart3);
 
         // 计算接收到的数据长度
-        uint8_t COUNTER = UART_BUFFER_SIZE - __HAL_DMA_GET_COUNTER(&hdma_usart3_rx);
+        modbus_rx_len  = UART_BUFFER_SIZE - __HAL_DMA_GET_COUNTER(&hdma_usart3_rx);
 
-        memcpy(modbus_rtu_rx_backup, modbus_rtu_rx_buf, COUNTER); // 数据转存到rx_buffer
-        for(int i = 0; i < COUNTER; i++)
-        {
-            printf("%02X", modbus_rtu_rx_buf[i]);
+        //释放信号量，通知 Modbus 任务数据到了
+        if (modbus_rx_sem != NULL) {
+            osSemaphoreRelease(modbus_rx_sem);
         }
-        printf("\r\n");
         // 重新启动DMA接收
         HAL_UART_Receive_DMA(&huart3, modbus_rtu_rx_buf, UART_BUFFER_SIZE);
     }

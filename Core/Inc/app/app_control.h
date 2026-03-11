@@ -1,5 +1,15 @@
 #ifndef __APP_CONTROL_H
 #define __APP_CONTROL_H
+#include "main.h"
+
+typedef enum{
+    MODBUS_ADDR_BLDC1   = 0x02,     // BLDC电机1
+    MODBUS_ADDR_BLDC2   = 0x03,     // BLDC电机2
+    MODBUS_ADDR_OD      = 0x20,     // 自研OD模块   
+    MODBUS_ADDR_PH      = 0x01,     // PH模块
+    MODBUS_ADDR_TEMP    = 0x80      // 温控模块
+
+}ModbusAddr_t;
 
 // 定义电机硬件资源结构体
 typedef struct {

@@ -43,7 +43,7 @@ extern "C"
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
 extern uint8_t pc_rx_buffer[UART_BUFFER_SIZE], pc_rx_backup[UART_BUFFER_SIZE];              // 串口3
-extern uint8_t modbus_rtu_rx_buf[UART_BUFFER_SIZE], modbus_rtu_rx_backup[UART_BUFFER_SIZE]; // 串口3
+extern uint8_t modbus_rtu_rx_buf[128]; // 串口3
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

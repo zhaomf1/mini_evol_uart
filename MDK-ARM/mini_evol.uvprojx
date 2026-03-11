@@ -410,6 +410,31 @@
               <FileType>1</FileType>
               <FilePath>..\Core\Src\app\tmc2209.c</FilePath>
             </File>
+            <File>
+              <FileName>modbus_rtu.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\app\modbus_rtu.c</FilePath>
+            </File>
+            <File>
+              <FileName>dev_od_ctrl.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\app\dev_od_ctrl.c</FilePath>
+            </File>
+            <File>
+              <FileName>dev_bldc_ctrl.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\app\dev_bldc_ctrl.c</FilePath>
+            </File>
+            <File>
+              <FileName>dev_temp_ctrl.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\app\dev_temp_ctrl.c</FilePath>
+            </File>
+            <File>
+              <FileName>dev_ph_ctrl.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\app\dev_ph_ctrl.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
