@@ -1,4 +1,4 @@
-mini_evol\tmc2209.o: ..\Core\Src\app\tmc2209.c
+mini_evol\tmc2209.o: ..\Core\Src\common\tmc2209.c
 mini_evol\tmc2209.o: ..\Core\Inc\peripheral\usart.h
 mini_evol\tmc2209.o: ..\Core\Inc\app\main.h
 mini_evol\tmc2209.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
@@ -39,8 +39,8 @@ mini_evol\tmc2209.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 mini_evol\tmc2209.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 mini_evol\tmc2209.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 mini_evol\tmc2209.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h
-mini_evol\tmc2209.o: ..\Core\Inc\app\tmc2209.h
-mini_evol\tmc2209.o: ..\Core\Inc\app\tmc2209_register.h
-mini_evol\tmc2209.o: ..\Core\Inc\app\tmc2209_constants.h
-mini_evol\tmc2209.o: ..\Core\Inc\app\tmc2209_fields.h
-mini_evol\tmc2209.o: ..\Core\Inc\app\crc.h
+mini_evol\tmc2209.o: ..\Core\Inc\common\tmc2209.h
+mini_evol\tmc2209.o: ..\Core\Inc\common\tmc2209_register.h
+mini_evol\tmc2209.o: ..\Core\Inc\common\tmc2209_constants.h
+mini_evol\tmc2209.o: ..\Core\Inc\common\tmc2209_fields.h
+mini_evol\tmc2209.o: ..\Core\Inc\common\crc.h

@@ -1,7 +1,7 @@
 mini_evol\dev_temp_ctrl.o: ..\Core\Src\app\dev_temp_ctrl.c
 mini_evol\dev_temp_ctrl.o: ..\Core\Inc\app\dev_temp_ctrl.h
 mini_evol\dev_temp_ctrl.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
-mini_evol\dev_temp_ctrl.o: ..\Core\Inc\app\modbus_rtu.h
+mini_evol\dev_temp_ctrl.o: ..\Core\Inc\common\modbus_rtu.h
 mini_evol\dev_temp_ctrl.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h
 mini_evol\dev_temp_ctrl.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
 mini_evol\dev_temp_ctrl.o: ..\Core\Inc\app\app_control.h

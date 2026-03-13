@@ -11,7 +11,7 @@ typedef enum
     TEMP_OPEN           //探头没接
 } temp_alarm_t;
 
-
+int temp_ctrl_switch_ctrl_temperature(uint16_t state);
 int temp_ctrl_set_temperature(uint16_t temperature);
 int temp_ctrl_read_temperature(uint16_t *temperature);
 int temp_ctrl_read_alarm(void);

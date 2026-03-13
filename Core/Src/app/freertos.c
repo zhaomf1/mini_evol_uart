@@ -23,6 +23,8 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "modbus_rtu.h"
+#include "app_control.h"
+#include "usart_comm.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -49,9 +51,22 @@
 
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
+//任务句柄
 osThreadId_t defaultTaskHandle;
+osThreadId_t uartCommTaskHandle;  //与上位机通讯任务句柄
+
+//消息队列句柄
+osMessageQueueId_t uartRxQueueHandle;   //串口接收消息队列
+
 const osThreadAttr_t defaultTask_attributes = {
     .name = "defaultTask",
+    // .stack_size = 128 * 4,
+    .stack_size = 256 * 4,      //printf占用栈空间，先设置大点便于调试
+    .priority = (osPriority_t)osPriorityNormal,
+};
+
+const osThreadAttr_t uartCommTask_attributes = {
+    .name = "uartCommTask",
     // .stack_size = 128 * 4,
     .stack_size = 256 * 4,      //printf占用栈空间，先设置大点便于调试
     .priority = (osPriority_t)osPriorityNormal,
@@ -93,13 +108,13 @@ void MX_FREERTOS_Init(void)
     /* USER CODE END RTOS_TIMERS */
 
     /* USER CODE BEGIN RTOS_QUEUES */
-    /* add queues, ... */
+     uartRxQueueHandle = osMessageQueueNew(10, sizeof(UartMsg_t), NULL);    //创建串口接收消息队列
     /* USER CODE END RTOS_QUEUES */
 
     /* Create the thread(s) */
     /* creation of defaultTask */
     defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
-
+    uartCommTaskHandle = osThreadNew(uart_comm_task, NULL, &uartCommTask_attributes);    //创建与上位机通讯任务
     /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
     /* USER CODE END RTOS_THREADS */
@@ -120,6 +135,9 @@ void StartDefaultTask(void *argument)
 {
     /* USER CODE BEGIN StartDefaultTask */
     uint8_t first_enter = 1;
+    uint16_t color_cnt = 0;
+    uint16_t time_cnt = 0;
+
 
     /* Infinite loop */
     for (;;)
@@ -130,7 +148,7 @@ void StartDefaultTask(void *argument)
 
         // OD测试程序
         {
-            #if 1
+            #if 0
                 extern int od_ctrl_read_value(uint16_t *od);
                 uint16_t od = 0;
                 int ret = od_ctrl_read_value(&od);
@@ -142,9 +160,9 @@ void StartDefaultTask(void *argument)
 
         //直流无刷电机测试程序
         {
-            #if 1
+            #if 0
             extern int bldc_ctrl_enable(void);
-            extern int bldc_ctrl_set_speed(uint16_t speed);
+            extern int bldc_ctrl_set_speed(ModbusAddr_t bldc_addr,uint16_t speed);
             extern int bldc_ctrl_set_dir(uint16_t dir);
             extern int bldc_ctrl_switch(uint16_t switch_ctrl);
             extern int bldc_ctrl_set_speed_up_time(uint16_t time);
@@ -155,7 +173,7 @@ void StartDefaultTask(void *argument)
             {
                 bldc_ctrl_enable();
                 bldc_ctrl_set_protocol_trans(0);
-                bldc_ctrl_set_speed(5000);
+                bldc_ctrl_set_speed(MODBUS_ADDR_TRAIN_BLDC,5000);
                 bldc_ctrl_set_dir(0);
                 bldc_ctrl_set_speed_up_time(8);
                 bldc_ctrl_set_slow_down_time(8);
@@ -165,7 +183,7 @@ void StartDefaultTask(void *argument)
             
             static uint16_t cnt = 0;
 
-            bldc_ctrl_set_speed(cnt);
+            bldc_ctrl_set_speed(MODBUS_ADDR_TRAIN_BLDC,cnt);
 
             cnt += 50;
             if(cnt >= 2500)
@@ -178,7 +196,7 @@ void StartDefaultTask(void *argument)
 
         //温控测试程序
         {
-            #if 1
+            #if 0
             extern int temp_ctrl_set_temperature(uint16_t temperature);
             extern int temp_ctrl_read_temperature(uint16_t *temperature);
             extern int temp_ctrl_read_alarm(void);
@@ -186,7 +204,7 @@ void StartDefaultTask(void *argument)
 
             if(first_enter)
             {
-                temp_ctrl_set_temperature(500);    //设定10摄氏度
+                temp_ctrl_set_temperature(1500);    //设定10摄氏度
                 temp_ctrl_set_timeout(3600);   
             }
 
@@ -201,13 +219,46 @@ void StartDefaultTask(void *argument)
 
         //PH测试程序
         {
-            #if 1
+            #if 0
             extern int ph_ctrl_read_value(float *od);
             float ph = 0;
             int ret = ph_ctrl_read_value(&ph);
             // printf("PH value = %.2f\n",ph);
             #endif
         }
+
+        //RGB测试程序
+        {
+            #if 1
+
+            if(color_cnt%3 == 0)
+            {
+                rgb_set_color((RgbColor_t)RGB_RED);
+                printf("R\n");
+            }
+            else if(color_cnt%3 == 1)
+            {
+                rgb_set_color((RgbColor_t)RGB_GREEN);
+                printf("G\n");
+            }
+            else if(color_cnt%3 == 2)
+            {
+                rgb_set_color((RgbColor_t)RGB_BLUE);
+                printf("B\n");
+            }
+
+            color_cnt++;
+
+            #endif
+        }
+
+        //延时初始化无刷电机
+        if(time_cnt == 1)
+        {
+            extern void bldc_init(void);
+            bldc_init();
+        }
+        time_cnt++;
 
         first_enter = 0;
         

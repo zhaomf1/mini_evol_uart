@@ -24,7 +24,7 @@
 #include "main.h"
 
 /* USER CODE BEGIN 0 */
-uint8_t pc_rx_buffer[UART_BUFFER_SIZE], pc_rx_backup[UART_BUFFER_SIZE];              // 串口1
+uint8_t pc_rx_buffer[UART_BUFFER_SIZE];              // 串口1
 uint8_t modbus_rtu_rx_buf[128]; // 串口3
 volatile uint16_t modbus_rx_len = 0;            //备份数据长度，其他函数调用，防止中断更改
 
@@ -692,6 +692,14 @@ int rs485_receive(uint8_t *data, uint16_t len, uint32_t timeout)
     return (HAL_UART_Receive(&huart3, data, len, timeout) == HAL_OK) ? 0 : -1;
 }
 
+/**
+ * @brief 串口1通讯，与上位机通讯
+ */
+int host_transmit(uint8_t *data, uint16_t len)
+{
+    HAL_StatusTypeDef status = HAL_UART_Transmit_DMA(&huart1, data, len);
+    return (status == HAL_OK) ? 0 : -1;
+}
 
 
 /* USER CODE END 1 */

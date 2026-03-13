@@ -66,6 +66,7 @@ void uart_dma_init(void);
 int rs485_transmit(uint8_t *data, uint16_t len, uint32_t timeout);
 int rs485_receive(uint8_t *data, uint16_t len, uint32_t timeout);
 void modbus_create_rx_semaphore(void);
+int host_transmit(uint8_t *data, uint16_t len);
 
 
 /* USER CODE END Prototypes */

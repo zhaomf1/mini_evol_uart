@@ -23,6 +23,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "usart.h"
+
+#include "usart_comm.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
@@ -339,16 +341,26 @@ void USART1_IRQHandler(void)
         HAL_UART_DMAStop(&huart1);
 
         // 计算接收到的数据长度
-        uint8_t COUNTER = UART_BUFFER_SIZE - __HAL_DMA_GET_COUNTER(&hdma_usart1_rx);
+        uint16_t  recv_len = UART_BUFFER_SIZE - __HAL_DMA_GET_COUNTER(&hdma_usart1_rx);
 
-        memcpy(pc_rx_backup, pc_rx_buffer, COUNTER); // 数据转存到rx_buffer
-        for(int i = 0; i < COUNTER; i++)
+        // 准备通过队列发送消息
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        UartMsg_t msg;
+
+        //填充消息内容
+        msg.data_ptr = pc_rx_buffer; // 指向DMA接收缓冲区
+        msg.len = recv_len;          // 记录长度
+
+        //发送消息队列
+        if (uartRxQueueHandle != NULL)
         {
-            printf("%02X ", pc_rx_backup[i]);
+            if (xQueueSendFromISR((QueueHandle_t)uartRxQueueHandle, &msg, &xHigherPriorityTaskWoken) != pdPASS)
+            {
+                // 发送失败处理（例如队列满了），可以在这里记录错误
+                // Error_Handler();
+            }
         }
-        printf("\r\n");
 
-        //测试代码
         
 
         // 重新启动DMA接收

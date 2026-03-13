@@ -3,11 +3,11 @@
 #include "main.h"
 
 typedef enum{
-    MODBUS_ADDR_BLDC1   = 0x02,     // BLDC电机1
-    MODBUS_ADDR_BLDC2   = 0x03,     // BLDC电机2
-    MODBUS_ADDR_OD      = 0x20,     // 自研OD模块   
-    MODBUS_ADDR_PH      = 0x01,     // PH模块
-    MODBUS_ADDR_TEMP    = 0x80      // 温控模块
+    MODBUS_ADDR_TRAIN_BLDC      = 0x02,     // 培养电机
+    MODBUS_ADDR_FEEDING_BLDC    = 0x03,     // 补料电机
+    MODBUS_ADDR_OD              = 0x20,     // 自研OD模块   
+    MODBUS_ADDR_PH              = 0x01,     // PH模块
+    MODBUS_ADDR_TEMP            = 0x80      // 温控模块
 
 }ModbusAddr_t;
 
@@ -45,6 +45,21 @@ typedef enum {
     STEP_MOTOR_CMD_DIR       // 方向控制
 } StepMotorCmd_t ;
 
+// 定义RGB结构体
+typedef struct {
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+} RgbColor_t;
+
+// 定义一些常用颜色
+#define RGB_RED     {10, 0, 0}
+#define RGB_GREEN   {0, 39, 0}
+#define RGB_BLUE    {0, 0, 10}
+#define RGB_WHITE   {100, 100, 100}
+#define RGB_OFF     {0, 0, 0}
+#define RGB_PURPLE  {100, 0, 100}
+
 /***************************************
  *  公共函数
  ***************************************/
@@ -72,5 +87,8 @@ void drain_valve_off(void);
 //电机控制
 void step_motor_init(void);
 void step_motor_control(StepMotorId_t id, StepMotorCmd_t cmd, uint16_t value);
+
+//RGB三色灯控制
+void rgb_set_color(RgbColor_t color);
 
 #endif

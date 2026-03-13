@@ -1,7 +1,7 @@
-mini_evol\cjson_pool.o: ..\Core\Src\app\cjson_pool.c
-mini_evol\cjson_pool.o: ..\Core\Inc\app\cjson_pool.h
+mini_evol\cjson_pool.o: ..\Core\Src\common\cjson_pool.c
+mini_evol\cjson_pool.o: ..\Core\Inc\common\cjson_pool.h
 mini_evol\cjson_pool.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
-mini_evol\cjson_pool.o: ..\Core\Inc\app\cJSON.h
+mini_evol\cjson_pool.o: ..\Core\Inc\common\cJSON.h
 mini_evol\cjson_pool.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
 mini_evol\cjson_pool.o: ..\Core\Inc\system\stm32f4xx_hal_conf.h
 mini_evol\cjson_pool.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h

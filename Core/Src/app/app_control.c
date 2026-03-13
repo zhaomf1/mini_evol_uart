@@ -160,4 +160,24 @@ void step_motor_control(StepMotorId_t id, StepMotorCmd_t cmd, uint16_t value)
     }
 }
 
+//三色灯控制
+void rgb_set_color(RgbColor_t color)
+{
+        // 限制输入范围在 0-100 之间，防止溢出
+    if (color.r > 100) color.r = 100;
+    if (color.g > 100) color.g = 100;
+    if (color.b > 100) color.b = 100;
+
+    // 假设自动重装载值 (Period) 为 100 (即 TIM4->ARR = 100)
+    // 如果你的Period是255或其他值，请将下面的乘数改为对应的值，或者直接传入CCR的值
+    
+    // 设置红色 (TIM4_CH2 -> PD13)
+    __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_2, color.r);
+    
+    // 设置绿色 (TIM4_CH3 -> PD14)
+    __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, color.g);
+    
+    // 设置蓝色 (TIM4_CH4 -> PD15)
+    __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, color.b);
+}
 

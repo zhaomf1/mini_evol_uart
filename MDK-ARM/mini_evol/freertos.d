@@ -48,4 +48,7 @@ mini_evol\freertos.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 mini_evol\freertos.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 mini_evol\freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h
 mini_evol\freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h
-mini_evol\freertos.o: ..\Core\Inc\app\modbus_rtu.h
+mini_evol\freertos.o: ..\Core\Inc\common\modbus_rtu.h
+mini_evol\freertos.o: ..\Core\Inc\app\app_control.h
+mini_evol\freertos.o: ..\Core\Inc\app\usart_comm.h
+mini_evol\freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h

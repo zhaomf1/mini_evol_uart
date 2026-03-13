@@ -57,8 +57,10 @@ mini_evol\main.o: ..\Core\Inc\peripheral\spi.h
 mini_evol\main.o: ..\Core\Inc\peripheral\tim.h
 mini_evol\main.o: ..\Core\Inc\peripheral\usart.h
 mini_evol\main.o: ..\Core\Inc\peripheral\gpio.h
-mini_evol\main.o: ..\Core\Inc\app\tmc2209.h
-mini_evol\main.o: ..\Core\Inc\app\tmc2209_register.h
-mini_evol\main.o: ..\Core\Inc\app\tmc2209_constants.h
-mini_evol\main.o: ..\Core\Inc\app\tmc2209_fields.h
+mini_evol\main.o: ..\Core\Inc\common\tmc2209.h
+mini_evol\main.o: ..\Core\Inc\common\tmc2209_register.h
+mini_evol\main.o: ..\Core\Inc\common\tmc2209_constants.h
+mini_evol\main.o: ..\Core\Inc\common\tmc2209_fields.h
 mini_evol\main.o: ..\Core\Inc\app\app_control.h
+mini_evol\main.o: ..\Core\Inc\common\cjson_pool.h
+mini_evol\main.o: ..\Core\Inc\app\dev_bldc_ctrl.h

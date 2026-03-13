@@ -332,7 +332,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F405xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;..\Core\Inc\app;..\Core\Inc\peripheral;..\Core\Inc\system</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;..\Core\Inc\app;..\Core\Inc\peripheral;..\Core\Inc\system;..\Core\Inc\common</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -434,6 +434,26 @@
               <FileName>dev_ph_ctrl.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Core\Src\app\dev_ph_ctrl.c</FilePath>
+            </File>
+            <File>
+              <FileName>usart_comm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\app\usart_comm.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Application/User/common</GroupName>
+          <Files>
+            <File>
+              <FileName>cJSON.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\common\cJSON.c</FilePath>
+            </File>
+            <File>
+              <FileName>cjson_pool.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\common\cjson_pool.c</FilePath>
             </File>
           </Files>
         </Group>

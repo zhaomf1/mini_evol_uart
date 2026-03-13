@@ -39,8 +39,8 @@ mini_evol\app_control.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 mini_evol\app_control.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 mini_evol\app_control.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 mini_evol\app_control.o: ..\Core\Inc\app\app_control.h
-mini_evol\app_control.o: ..\Core\Inc\app\tmc2209.h
-mini_evol\app_control.o: ..\Core\Inc\app\tmc2209_register.h
-mini_evol\app_control.o: ..\Core\Inc\app\tmc2209_constants.h
-mini_evol\app_control.o: ..\Core\Inc\app\tmc2209_fields.h
+mini_evol\app_control.o: ..\Core\Inc\common\tmc2209.h
+mini_evol\app_control.o: ..\Core\Inc\common\tmc2209_register.h
+mini_evol\app_control.o: ..\Core\Inc\common\tmc2209_constants.h
+mini_evol\app_control.o: ..\Core\Inc\common\tmc2209_fields.h
 mini_evol\app_control.o: ..\Core\Inc\peripheral\tim.h

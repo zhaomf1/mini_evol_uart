@@ -2,9 +2,18 @@
 #include "modbus_rtu.h"
 #include "app_control.h"
 
-// typedef struct{
 
-// } temp_alarm_t;
+/**
+ * @brief 控制温控开关
+ * @param state     非0-开启，0x0000-关闭
+ * @return MODBUS_OK 成功，其他错误码
+ */
+int temp_ctrl_switch_ctrl_temperature(uint16_t state)
+{
+    int ret = modbus_write_single_coil(MODBUS_ADDR_TEMP, 0x0000, state);
+
+    return ret;
+}
 
 /**
  * @brief 设定目标温度

@@ -30,6 +30,8 @@
 #include "gpio.h"
 #include "tmc2209.h"
 #include "app_control.h"
+#include "cjson_pool.h"
+#include "dev_bldc_ctrl.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -114,21 +116,14 @@ int main(void)
     MX_USART6_UART_Init();
     /* USER CODE BEGIN 2 */
     printf("system start\n");
+    cjson_pool_init();		//cjson内存池初始化
+    uart_dma_init();    //DMA初始化
+    // bldc_init();    //直流无刷电机初始化,需等待硬件串口初始化完成后再调用，目前放到任务中，延时500ms执行
+    step_motor_init();  //步进电机初始化
 
-    uart_dma_init();
-
-    step_motor_init();
-    step_motor_control(STEP_MOTOR_PH,STEP_MOTOR_CMD_SWITCH,STEP_MOTOR_ENABLE);
-    step_motor_control(STEP_MOTOR_PH,STEP_MOTOR_CMD_DIR,STEP_MOTOR_REVERSES);
-
-    step_motor_control(STEP_MOTOR_FEED,STEP_MOTOR_CMD_SWITCH,STEP_MOTOR_ENABLE);
-    step_motor_control(STEP_MOTOR_FEED,STEP_MOTOR_CMD_DIR,STEP_MOTOR_REVERSES);
-
-    step_motor_control(STEP_MOTOR_DRAIN,STEP_MOTOR_CMD_SWITCH,STEP_MOTOR_ENABLE);
-    step_motor_control(STEP_MOTOR_DRAIN,STEP_MOTOR_CMD_DIR,STEP_MOTOR_REVERSES);
-
-    step_motor_control(STEP_MOTOR_RESERVED,STEP_MOTOR_CMD_SWITCH,STEP_MOTOR_ENABLE);
-    step_motor_control(STEP_MOTOR_RESERVED,STEP_MOTOR_CMD_DIR,STEP_MOTOR_REVERSES);
+    HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2); // 启动 CH2 (红色/PD13)
+    HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3); // 启动 CH3 (绿色/PD14)
+    HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4); // 启动 CH4 (蓝色/PD15)
 
 
     /* USER CODE END 2 */
