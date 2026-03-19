@@ -30,9 +30,6 @@ static const osMutexAttr_t modbus_mutex_attr = {
     .cb_size   = 0
 };
 
-static uint8_t modbus_rtu_rx_backup[128];
-static uint16_t rx_len;
-
 /* CRC16 查表 */
 static const uint16_t crc_tab[256] = {
     0x0000,0xC0C1,0xC181,0x0140,0xC301,0x03C0,0x0280,0xC241,0xC601,0x06C0,0x0780,0xC741,0x0500,0xC5C1,0xC481,0x0440,
@@ -131,12 +128,9 @@ static int modbus_transaction(uint8_t slave, uint8_t func, uint8_t *req, uint16_
     }
 
     // 4. 数据校验与解析
-    // 此时数据已经在 modbus_rtu_rx_backup 中，长度为 rx_len
-    rx_len = modbus_rx_len;
-    memcpy(modbus_rtu_rx_backup, modbus_rtu_rx_buf, rx_len);
 
     // 基本长度检查：地址(1) + 功能码(1) + CRC(2) = 4字节
-    if (rx_len < 4) {
+    if (modbus_rx_len < 4) {
         osMutexRelease(modbus_mutex);
         modbus_status.error_count++;
         return MODBUS_ERR_RESP_LEN;
@@ -150,8 +144,8 @@ static int modbus_transaction(uint8_t slave, uint8_t func, uint8_t *req, uint16_
     }
 
     // 校验 CRC
-    uint16_t recv_crc = (modbus_rtu_rx_backup[rx_len-1] << 8) | modbus_rtu_rx_backup[rx_len-2];
-    uint16_t calc_crc = modbus_crc16(modbus_rtu_rx_backup, rx_len - 2);
+    uint16_t recv_crc = (modbus_rtu_rx_backup[modbus_rx_len-1] << 8) | modbus_rtu_rx_backup[modbus_rx_len-2];
+    uint16_t calc_crc = modbus_crc16(modbus_rtu_rx_backup, modbus_rx_len - 2);
     if (recv_crc != calc_crc) {
         osMutexRelease(modbus_mutex);
         modbus_status.crc_error_count++;
@@ -161,7 +155,7 @@ static int modbus_transaction(uint8_t slave, uint8_t func, uint8_t *req, uint16_
 
     // 检查异常响应
     if (modbus_rtu_rx_backup[1] & 0x80) {
-        if (exception_code && rx_len >= 3) {
+        if (exception_code && modbus_rx_len >= 3) {
             *exception_code = modbus_rtu_rx_backup[2];
         }
         osMutexRelease(modbus_mutex);
@@ -174,12 +168,12 @@ static int modbus_transaction(uint8_t slave, uint8_t func, uint8_t *req, uint16_
 
     // 5. 提取有效数据
     uint8_t *data_ptr = &modbus_rtu_rx_backup[2]; // 默认指向数据区起始位置
-    uint16_t data_len = rx_len - 4;         // 默认数据长度 = 总长 - 地址 - 功能码 - CRC
+    uint16_t data_len = modbus_rx_len - 4;         // 默认数据长度 = 总长 - 地址 - 功能码 - CRC
 
     // 对于读操作，第3个字节是 Byte Count，需要跳过它
     if (func == MODBUS_FC_READ_HOLDING_REGS || func == MODBUS_FC_READ_INPUT_REGS ||
         func == MODBUS_FC_READ_COILS || func == MODBUS_FC_READ_DISCRETE_INPUTS) {
-        if (rx_len < 3) {
+        if (modbus_rx_len < 3) {
              osMutexRelease(modbus_mutex);
              modbus_status.error_count++;
              return MODBUS_ERR_RESP_LEN;

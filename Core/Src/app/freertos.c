@@ -72,7 +72,7 @@ const osThreadAttr_t uartCommTask_attributes = {
     .name = "uartCommTask",
     // .stack_size = 128 * 4,
     .stack_size = 256 * 4,      //printf占用栈空间，先设置大点便于调试
-    .priority = (osPriority_t)osPriorityNormal,
+    .priority = (osPriority_t)osPriorityAboveNormal,
 };
 
 const osThreadAttr_t timerTask_attributes = {

@@ -37,13 +37,14 @@ extern "C"
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-#define UART_BUFFER_SIZE 1024 // 串口接收长度
+#define HOST_BUFFER_SIZE 1024 // 串口接收长度
+#define MODBUS_BUFFER_SIZE 128
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-extern uint8_t pc_rx_buffer[UART_BUFFER_SIZE];              // 串口3
-extern uint8_t modbus_rtu_rx_buf[128]; // 串口3
+extern uint8_t pc_rx_buffer[HOST_BUFFER_SIZE];              // 串口1
+extern uint8_t modbus_rtu_rx_buf[MODBUS_BUFFER_SIZE],modbus_rtu_rx_backup[MODBUS_BUFFER_SIZE];// 串口3
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
