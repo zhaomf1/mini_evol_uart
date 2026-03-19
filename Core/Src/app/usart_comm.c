@@ -1,8 +1,11 @@
+#include "stdio.h"
+#include "string.h"
 #include "usart_comm.h"
 #include "usart.h"    // 你的底层串口驱动头文件
 #include "cJSON.h"  // cJSON库头文件
 #include "cjson_pool.h"
 #include "stdio.h"
+#include "string.h"
 #include "json_key.h"
 #include "app_control.h"
 #include "dev_bldc_ctrl.h"
@@ -49,7 +52,7 @@ char* send_bldc_data(uint8_t no, uint16_t speed, uint8_t mode, const char *error
     }
 
     // 2. 添加cmd字段（直流无刷电机=0，宏定义键名JSON_KEY_CMD）
-    if (!cJSON_AddNumberToObject(root, JSON_KEY_CMD, 0)) {
+    if (!cJSON_AddNumberToObject(root, JSON_KEY_CMD, CMD_BRUSHLESS_MOTOR)) {
         return json_error_handler(root);
     }
 
@@ -76,7 +79,8 @@ char* send_bldc_data(uint8_t no, uint16_t speed, uint8_t mode, const char *error
     // 6. 生成带格式的JSON字符串（便于调试）
     char *json_str = cJSON_Print(root);
     uint16_t json_len = strlen(json_str);
-    host_transmit(json_str, json_len);
+ 
+    host_transmit((uint8_t *)json_str, json_len);
 
     cJSON_Delete(root);
     cjson_pool_reset();
@@ -95,7 +99,7 @@ char* send_steo_motor_data(uint8_t no, uint16_t speed, uint16_t step, uint8_t mo
     }
 
     // 2. 添加cmd字段（步进电机=1，宏定义键名JSON_KEY_CMD）
-    if (!cJSON_AddNumberToObject(root, JSON_KEY_CMD, 1)) {
+    if (!cJSON_AddNumberToObject(root, JSON_KEY_CMD, CMD_STEPPER_MOTOR)) {
         return json_error_handler(root);
     }
 
@@ -123,7 +127,7 @@ char* send_steo_motor_data(uint8_t no, uint16_t speed, uint16_t step, uint8_t mo
     // 6. 生成带格式的JSON字符串（便于调试）
     char *json_str = cJSON_Print(root);
     uint16_t json_len = strlen(json_str);
-    host_transmit(json_str, json_len);
+    host_transmit((uint8_t *)json_str, json_len);
 
     cJSON_Delete(root);
     cjson_pool_reset();
@@ -142,7 +146,7 @@ char* send_valve_data(uint8_t no, uint8_t mode, const char *error)
     }
 
     // 2. 添加cmd字段（电磁阀=2，宏定义键名JSON_KEY_CMD）
-    if (!cJSON_AddNumberToObject(root, JSON_KEY_CMD, 2)) {
+    if (!cJSON_AddNumberToObject(root, JSON_KEY_CMD, CMD_SOLENOID_VALVE)) {
         return json_error_handler(root);
     }
 
@@ -168,7 +172,7 @@ char* send_valve_data(uint8_t no, uint8_t mode, const char *error)
     // 6. 生成带格式的JSON字符串（便于调试）
     char *json_str = cJSON_Print(root);
     uint16_t json_len = strlen(json_str);
-    host_transmit(json_str, json_len);
+    host_transmit((uint8_t *)json_str, json_len);
 
     cJSON_Delete(root);
     cjson_pool_reset();
@@ -188,7 +192,7 @@ char* send_ph_data(uint8_t ph_cmd, uint8_t phTime, uint8_t phFactor,
     }
 
     // 2. 添加cmd字段（PH板=3，宏定义键名JSON_KEY_CMD）
-    if (!cJSON_AddNumberToObject(root, JSON_KEY_CMD, 3)) {
+    if (!cJSON_AddNumberToObject(root, JSON_KEY_CMD, CMD_PH_BOARD)) {
         return json_error_handler(root);
     }
 
@@ -218,7 +222,7 @@ char* send_ph_data(uint8_t ph_cmd, uint8_t phTime, uint8_t phFactor,
     // 6. 生成带格式的JSON字符串（便于调试）
     char *json_str = cJSON_Print(root);
     uint16_t json_len = strlen(json_str);
-    host_transmit(json_str, json_len);
+    host_transmit((uint8_t *)json_str, json_len);
 
     cJSON_Delete(root);
     cjson_pool_reset();
@@ -236,7 +240,7 @@ char* send_od_data(uint16_t odValue, const char *error) {
     }
 
     // 2. 添加cmd字段（OD板=4，宏定义键名JSON_KEY_CMD）
-    if (!cJSON_AddNumberToObject(root, JSON_KEY_CMD, 4)) {
+    if (!cJSON_AddNumberToObject(root, JSON_KEY_CMD, CMD_OD_BOARD)) {
         return json_error_handler(root);
     }
 
@@ -261,7 +265,7 @@ char* send_od_data(uint16_t odValue, const char *error) {
     // 6. 生成带格式的JSON字符串（便于调试）
     char *json_str = cJSON_Print(root);
     uint16_t json_len = strlen(json_str);
-    host_transmit(json_str, json_len);
+    host_transmit((uint8_t *)json_str, json_len);
 
     cJSON_Delete(root);
     cjson_pool_reset();
@@ -279,7 +283,7 @@ char* send_temp_data(uint8_t temp_cmd, float tempValue, const char *error) {
     }
 
     // 2. 添加cmd字段（温控=5，宏定义键名JSON_KEY_CMD）
-    if (!cJSON_AddNumberToObject(root, JSON_KEY_CMD, 5)) {
+    if (!cJSON_AddNumberToObject(root, JSON_KEY_CMD, CMD_TEMPERATURE)) {
         return json_error_handler(root);
     }
 
@@ -305,7 +309,7 @@ char* send_temp_data(uint8_t temp_cmd, float tempValue, const char *error) {
     // 6. 生成带格式的JSON字符串（便于调试）
     char *json_str = cJSON_Print(root);
     uint16_t json_len = strlen(json_str);
-    host_transmit(json_str, json_len);
+    host_transmit((uint8_t *)json_str, json_len);
 
     cJSON_Delete(root);
     cjson_pool_reset();
@@ -323,7 +327,7 @@ char* send_rgb_data(uint8_t r, uint8_t g, uint8_t b, uint8_t mode, const char *e
     }
 
     // 2. 添加cmd字段（RGB灯=6，宏定义键名JSON_KEY_CMD）
-    if (!cJSON_AddNumberToObject(root, JSON_KEY_CMD, 6)) {
+    if (!cJSON_AddNumberToObject(root, JSON_KEY_CMD, CMD_RGB_LIGHT)) {
         return json_error_handler(root);
     }
 
@@ -351,7 +355,7 @@ char* send_rgb_data(uint8_t r, uint8_t g, uint8_t b, uint8_t mode, const char *e
     // 6. 生成带格式的JSON字符串（便于调试）
     char *json_str = cJSON_Print(root);
     uint16_t json_len = strlen(json_str);
-    host_transmit(json_str, json_len);
+    host_transmit((uint8_t *)json_str, json_len);
 
     cJSON_Delete(root);
     cjson_pool_reset();
@@ -371,8 +375,6 @@ static void parse_bldc_motor(cJSON *root, SysCtrlCmd_t *cmd) {
         return;
     }
 
-    // bldc_init();
-
     // 直接解析数值字段
     cmd->data.bldc_motor.no = (uint8_t)safe_get_json_number(motor_data, JSON_KEY_DATA_NO, 0);
     cmd->data.bldc_motor.speed = (uint16_t)safe_get_json_number(motor_data, JSON_KEY_MOTOR_DATA_SPEED, 0);
@@ -382,11 +384,11 @@ static void parse_bldc_motor(cJSON *root, SysCtrlCmd_t *cmd) {
     {
         case TRAIN_MOTOR:
             //设置转速,速度设置为0代表关闭
-            if(cmd->data.bldc_motor.mode == BLDC_START)
+            if(cmd->data.bldc_motor.mode == MOTOR_MODE_CW_KEEP)
             {
                 bldc_ctrl_set_speed(MODBUS_ADDR_TRAIN_BLDC,cmd->data.bldc_motor.speed);
             }
-            else if(cmd->data.bldc_motor.mode == BLDC_STOP)
+            else if(cmd->data.bldc_motor.mode == MOTOR_MODE_STOP)
             {
                 bldc_ctrl_set_speed(MODBUS_ADDR_TRAIN_BLDC,0);
             }
@@ -395,11 +397,11 @@ static void parse_bldc_motor(cJSON *root, SysCtrlCmd_t *cmd) {
             break;
         case FEDDING_MOTOR:
             //设置转速,速度设置为0代表关闭
-            if(cmd->data.bldc_motor.mode == BLDC_START)
+            if(cmd->data.bldc_motor.mode == MOTOR_MODE_CW_KEEP)
             {
                 bldc_ctrl_set_speed(MODBUS_ADDR_FEEDING_BLDC,cmd->data.bldc_motor.speed);
             }
-            else if(cmd->data.bldc_motor.mode == BLDC_STOP)
+            else if(cmd->data.bldc_motor.mode == MOTOR_MODE_STOP)
             {
                 bldc_ctrl_set_speed(MODBUS_ADDR_FEEDING_BLDC,0);
             }
@@ -422,6 +424,7 @@ static void parse_step_motor(cJSON *root, SysCtrlCmd_t *cmd) {
     if (!motor_data || !cJSON_IsObject(motor_data)) {
         return;
     }
+    uint16_t steptime = 0;
 
     cmd->data.stepp_motor.no = (uint8_t)safe_get_json_number(motor_data, JSON_KEY_DATA_NO, 0);
     cmd->data.stepp_motor.speed = (uint16_t)safe_get_json_number(motor_data, JSON_KEY_MOTOR_DATA_SPEED, 0);
@@ -429,20 +432,37 @@ static void parse_step_motor(cJSON *root, SysCtrlCmd_t *cmd) {
     cmd->data.stepp_motor.mode = (uint8_t)safe_get_json_number(motor_data, JSON_KEY_DATA_MODE, 0);
 
     //控制电机
-    if(cmd->data.stepp_motor.mode == 0 || cmd->data.stepp_motor.mode == 2)
+    if(cmd->data.stepp_motor.mode == MOTOR_MODE_CW)         //正转步数
     {
-        step_motor_control(cmd->data.stepp_motor.no,STEP_MOTOR_CMD_SWITCH,STEP_MOTOR_ENABLE);
-        step_motor_control(cmd->data.stepp_motor.no,STEP_MOTOR_CMD_DIR,STEP_MOTOR_FOREWARD);
+        step_motor_control((StepMotorId_t)cmd->data.stepp_motor.no,STEP_MOTOR_CMD_SWITCH,STEP_MOTOR_ENABLE);
+        step_motor_control((StepMotorId_t)cmd->data.stepp_motor.no,STEP_MOTOR_CMD_DIR,STEP_MOTOR_FOREWARD);
+        steptime = (uint16_t)((float)cmd->data.stepp_motor.step / (float)cmd->data.stepp_motor.speed * 1000);
+        set_step_motor_step_number((StepMotorId_t)cmd->data.stepp_motor.no,steptime);
     }
-    else if(cmd->data.stepp_motor.mode == 1 || cmd->data.stepp_motor.mode == 3)
+    else if (cmd->data.stepp_motor.mode == MOTOR_MODE_CCW)   //反转步数
     {
-        step_motor_control(cmd->data.stepp_motor.no,STEP_MOTOR_CMD_SWITCH,STEP_MOTOR_ENABLE);
-        step_motor_control(cmd->data.stepp_motor.no,STEP_MOTOR_CMD_DIR,STEP_MOTOR_REVERSES);
+        step_motor_control((StepMotorId_t)cmd->data.stepp_motor.no,STEP_MOTOR_CMD_SWITCH,STEP_MOTOR_ENABLE);
+        step_motor_control((StepMotorId_t)cmd->data.stepp_motor.no,STEP_MOTOR_CMD_DIR,STEP_MOTOR_REVERSES);
+        steptime = (uint16_t)((float)cmd->data.stepp_motor.step / (float)cmd->data.stepp_motor.speed * 1000);
+        set_step_motor_step_number((StepMotorId_t)cmd->data.stepp_motor.no,steptime);
     }
-    if(cmd->data.stepp_motor.mode == 4)
+    else if (cmd->data.stepp_motor.mode == MOTOR_MODE_CW_KEEP)   //持续正转
     {
-        step_motor_control(cmd->data.stepp_motor.no,STEP_MOTOR_CMD_SWITCH,STEP_MOTOR_DISABLE);
+        step_motor_control((StepMotorId_t)cmd->data.stepp_motor.no,STEP_MOTOR_CMD_SWITCH,STEP_MOTOR_ENABLE);
+        step_motor_control((StepMotorId_t)cmd->data.stepp_motor.no,STEP_MOTOR_CMD_DIR,STEP_MOTOR_FOREWARD);
     }
+    else if(cmd->data.stepp_motor.mode == MOTOR_MODE_CCW_KEEP)    //持续反转
+    {
+        step_motor_control((StepMotorId_t)cmd->data.stepp_motor.no,STEP_MOTOR_CMD_SWITCH,STEP_MOTOR_ENABLE);
+        step_motor_control((StepMotorId_t)cmd->data.stepp_motor.no,STEP_MOTOR_CMD_DIR,STEP_MOTOR_REVERSES);
+    }
+    else if(cmd->data.stepp_motor.mode == MOTOR_MODE_STOP)    //停止
+    {
+        step_motor_control((StepMotorId_t)cmd->data.stepp_motor.no,STEP_MOTOR_CMD_SWITCH,STEP_MOTOR_DISABLE);
+    }
+
+    //设置电机转速
+    step_motor_control((StepMotorId_t)cmd->data.stepp_motor.no,STEP_MOTOR_CMD_SPEED,cmd->data.stepp_motor.speed);
 
     //上报上位机
     send_steo_motor_data(cmd->data.stepp_motor.no,cmd->data.stepp_motor.speed,cmd->data.stepp_motor.step,cmd->data.stepp_motor.mode,NULL);
@@ -460,6 +480,65 @@ static void parse_valve(cJSON *root, SysCtrlCmd_t *cmd) {
 
     cmd->data.valve.no = (uint8_t)safe_get_json_number(valve_data, JSON_KEY_DATA_NO, 0);
     cmd->data.valve.mode = (uint8_t)safe_get_json_number(valve_data, JSON_KEY_DATA_MODE, 0);
+
+    switch(cmd->data.valve.no)
+    {
+        case VALVE_FEDDING:     //补料阀
+        if(cmd->data.valve.mode == VALVE_OPEN)
+        {
+            feed_valve_on();
+        }
+        else if(cmd->data.valve.mode == VALVE_CLOSE)
+        {
+            feed_valve_off();
+        }
+        break;
+
+        case VALVE_AIR_SUPPLY:  //补气阀
+        if(cmd->data.valve.mode == VALVE_OPEN)
+        {
+            air_supply_valve_on();
+        }
+        else if(cmd->data.valve.mode == VALVE_CLOSE)
+        {
+            air_supply_valve_off();
+        }
+        break;
+
+        case VALVE_FLOODLIGHT:  //照明灯
+        if(cmd->data.valve.mode == VALVE_OPEN)
+        {
+            light_on();
+        }
+        else if(cmd->data.valve.mode == VALVE_CLOSE)
+        {
+            light_off();
+        }
+        break;
+
+        case VALVE_UV_LAMP:     //紫外灯
+        if(cmd->data.valve.mode == VALVE_OPEN)
+        {
+            uv_lamp_on();
+        }
+        else if(cmd->data.valve.mode == VALVE_CLOSE)
+        {
+            uv_lamp_off();
+        }
+        break;
+
+        case VALVE_LIGHT_SOURCE_SHUTTER:    //光源快门
+        if(cmd->data.valve.mode == VALVE_OPEN)
+        {
+            // uv_lamp_on();
+        }
+        else if(cmd->data.valve.mode == VALVE_CLOSE)
+        {
+            // uv_lamp_off();
+        }
+        break;
+        
+    }
 
     send_valve_data(cmd->data.valve.no,cmd->data.valve.mode,NULL);
 
@@ -481,17 +560,43 @@ static void parse_ph_board(cJSON *root, SysCtrlCmd_t *cmd) {
     cmd->data.ph_board.setK = (float)safe_get_json_number(ph_data, JSON_KEY_PH_SET_K, 0.0f);
     cmd->data.ph_board.setB = (float)safe_get_json_number(ph_data, JSON_KEY_PH_SET_B, 0.0f);
 
-    if(cmd->data.ph_board.ph_cmd == 2)
+    if(cmd->data.ph_board.ph_cmd == PH_CMD_OPEN)  //设置PH值：需要做的操作：1.实时获取当前PH值，2.根据当前PH值选择酸碱泵电机运转时间，3.达到设定PH值后停止PH流程
+    {
+        PhCtrl_t ph_ctrl;
+        ph_ctrl.active = true;
+        ph_ctrl.ph_factor = cmd->data.ph_board.phFactor;
+        ph_ctrl.ph_value = cmd->data.ph_board.phValue;
+        ph_ctrl.ph_time = cmd->data.ph_board.phTime;
+
+        set_ph_ctrl_start(ph_ctrl);
+        send_ph_data( cmd->data.ph_board.ph_cmd, cmd->data.ph_board.phTime,cmd->data.ph_board.phFactor,cmd->data.ph_board.phValue,cmd->data.ph_board.setK,cmd->data.ph_board.setB,NULL);
+
+    }
+    else if(cmd->data.ph_board.ph_cmd == PH_CMD_CLOSE) //停止PH值设置，终止PH流程
+    {
+        set_ph_ctrl_stop();
+        send_ph_data( cmd->data.ph_board.ph_cmd, cmd->data.ph_board.phTime,cmd->data.ph_board.phFactor,cmd->data.ph_board.phValue,cmd->data.ph_board.setK,cmd->data.ph_board.setB,NULL);
+    }
+    else if(cmd->data.ph_board.ph_cmd == PH_CMD_GET) //获取当前PH值
     {
         float ph = 0;
+        float ph_k = 0;
+        float ph_b = 0;
         int ret = ph_ctrl_read_value(&ph);
+        get_ph_kb_value(&ph_k,&ph_b);
+        ph = ph_k * ph + ph_b;
+
         send_ph_data( cmd->data.ph_board.ph_cmd, cmd->data.ph_board.phTime,cmd->data.ph_board.phFactor,ph,cmd->data.ph_board.setK,cmd->data.ph_board.setB,NULL);
 
         
     }
+    else if(cmd->data.ph_board.ph_cmd == PH_CMD_SET_KB) //设定K,B标定值
+    {
+        printf("setK:%f,setB:%f\n",cmd->data.ph_board.setK,cmd->data.ph_board.setB);
+        set_ph_kb_value(cmd->data.ph_board.setK,cmd->data.ph_board.setB);
 
-
-    send_ph_data( cmd->data.ph_board.ph_cmd, cmd->data.ph_board.phTime,cmd->data.ph_board.phFactor,cmd->data.ph_board.phValue,cmd->data.ph_board.setK,cmd->data.ph_board.setB,NULL);
+        send_ph_data( cmd->data.ph_board.ph_cmd, cmd->data.ph_board.phTime,cmd->data.ph_board.phFactor,cmd->data.ph_board.phValue,cmd->data.ph_board.setK,cmd->data.ph_board.setB,NULL);
+    }
 
 }
 
@@ -543,7 +648,7 @@ static void parse_temperature(cJSON *root, SysCtrlCmd_t *cmd) {
     {
         uint16_t temp_get = 0;
         temp_ctrl_read_temperature(&temp_get);
-        float f_temp = (float)temp_get / 100.0;
+        float f_temp = (float)temp_get / 100.0f;
         send_temp_data(cmd->data.temperature_board.temperature_cmd,f_temp,NULL);
     }
 
@@ -558,12 +663,27 @@ static void parse_rgb_light(cJSON *root, SysCtrlCmd_t *cmd) {
         return;
     }
 
+    RgbColor_t rgb_color;
+    
     cmd->data.rgb_light.r = (uint8_t)safe_get_json_number(rgb_data, JSON_KEY_RGB_SET_R, 0);
     cmd->data.rgb_light.g = (uint8_t)safe_get_json_number(rgb_data, JSON_KEY_RGB_SET_G, 0);
     cmd->data.rgb_light.b = (uint8_t)safe_get_json_number(rgb_data, JSON_KEY_RGB_SET_B, 0);
     cmd->data.rgb_light.mode = (uint8_t)safe_get_json_number(rgb_data, JSON_KEY_DATA_MODE, 0);
 
-    send_rgb_data(cmd->data.rgb_light.r,cmd->data.rgb_light.g,cmd->data.rgb_light.b,cmd->data.rgb_light.mode,NULL);
+    if(cmd->data.rgb_light.mode == VALVE_OPEN) //开
+    {
+        rgb_color.r = cmd->data.rgb_light.r;
+        rgb_color.g = cmd->data.rgb_light.g;
+        rgb_color.b = cmd->data.rgb_light.b;
+
+        rgb_set_color(rgb_color);
+    }
+    else if(cmd->data.rgb_light.mode == VALVE_CLOSE) //关
+    {
+        rgb_switch_ctrl(VALVE_CLOSE);
+    }
+
+    send_rgb_data(cmd->data.rgb_light.r,cmd->data.rgb_light.g,cmd->data.rgb_light.b,cmd->data.rgb_light.mode,"NULL");
 
 }
 
@@ -577,19 +697,19 @@ static void parse_rgb_light(cJSON *root, SysCtrlCmd_t *cmd) {
  * @return 0=成功，-1=JSON格式错误，-2=指令类型未知
  */
 int parse_motor_ctrl_json(const char *json_str, SysCtrlCmd_t *cmd) {
-    // 初始化指令结构（error置空，仅用于后续上报）
+    // 初始化指令结构
     memset(cmd, 0, sizeof(SysCtrlCmd_t));
     cmd->cmd_type = CMD_UNKNOWN;
     memset(cmd->error, 0, sizeof(cmd->error)); // error字段初始化
 
-    // 2. 解析JSON根对象
+    // 解析JSON根对象
     cJSON *root = cJSON_Parse(json_str);
     if (!root) {
         cjson_pool_reset();
         return -1; // JSON格式错误
     }
 
-    // 3. 读取cmd字段（数值类型！）
+    // 读取cmd字段
     int cmd_num = (int)safe_get_json_number(root, "cmd", 0);
     switch (cmd_num) {
         case CMD_BRUSHLESS_MOTOR:
@@ -646,7 +766,7 @@ void uart_comm_task(void *argument)
         if (osMessageQueueGet(uartRxQueueHandle, &rx_msg, NULL, osWaitForever) == osOK)
         {
             printf("[DEBUG] Receive UART data:\n%.*s\n",rx_msg.len, rx_msg.data_ptr);
-            int ret = parse_motor_ctrl_json(rx_msg.data_ptr, &cmd);
+            int ret = parse_motor_ctrl_json((const char *)rx_msg.data_ptr, &cmd);
         }
 
         osDelay(10);

@@ -23,7 +23,24 @@ typedef enum {
     CMD_RGB_LIGHT,         // RGB灯
 
     CMD_UNKNOWN = 0xFF,    // 未知指令
-} CmdType;
+} CmdType_t;
+
+typedef enum{
+    VALVE_FEDDING = 0,              //补料阀
+    VALVE_AIR_SUPPLY,               //补气阀
+    VALVE_FLOODLIGHT,               //照明灯
+    VALVE_UV_LAMP,                  //紫外灯
+    VALVE_LIGHT_SOURCE_SHUTTER      //光源快门
+}ValveType_t;
+
+// 电机动作
+typedef enum {
+    MOTOR_MODE_CW = 0,           // 正转
+    MOTOR_MODE_CCW = 1,          // 反转
+    MOTOR_MODE_CW_KEEP = 2,      // 持续正转
+    MOTOR_MODE_CCW_KEEP = 3,     // 持续反转
+    MOTOR_MODE_STOP = 4,         // 停止
+} MotorMode_t;
 
 // 直流无刷电机数据结构
 typedef struct {
@@ -46,10 +63,15 @@ typedef struct {
     uint8_t mode;       // 模式：0x00关，0xFF开
 } ValveData_t;
 
+typedef enum{
+    VALVE_OPEN = 0,              // 开
+    VALVE_CLOSE = 0XFF,          // 关
+}ValveState_t;
+
 // PH板数据结构
 typedef struct {
     uint8_t ph_cmd;     // 0-set_true,1-set_false,2-get_ph,3-set_kb
-    uint8_t phTime;     // 时间
+    uint8_t phTime;     // 搅拌时间
     uint8_t phFactor;   // 0x00-酸因子,0x01-碱因子
     float phValue;      // PH值
     float setK;         // 校正K值
@@ -78,7 +100,7 @@ typedef struct {
 
 // 顶层指令结构（包含所有类型）
 typedef struct {
-    CmdType cmd_type;          // 指令类型
+    CmdType_t cmd_type;          // 指令类型
     char error[128];           // 报警信息
     union {                    // 共用体存储不同指令的业务数据
         BldcData_t bldc_motor;
@@ -102,24 +124,18 @@ typedef enum{
     TEMP_CTRL_GET,             //温度获取
 }TempCmd;
 
+typedef enum{
+    PH_CMD_OPEN = 0,        //PH开
+    PH_CMD_CLOSE,           //PH关
+    PH_CMD_GET,             //PH获取
+    PH_CMD_SET_KB           //PH校准
+}phCmd_t;
+
 
 
 extern osMessageQueueId_t uartRxQueueHandle;
 
 void uart_comm_task(void *argument);
-
-/**
- * @brief 封装直流无刷电机JSON指令（error在最后一行，用宏定义键名）
- * @param no 电机序号（0-培养电机，1-补料电机）
- * @param speed 电机速度
- * @param mode 电机方向（0-正转，1-反转，2-持续正转，3-持续反转，4-停止）
- * @param error 报警信息（无错误传""）
- * @return 生成的JSON字符串（需用free()释放），失败返回NULL
- */
-char* send_bldc_data(uint8_t no, uint16_t speed, uint8_t mode, const char *error);
-char* send_steo_motor_data(uint8_t no, uint16_t speed, uint16_t step, uint8_t mode, const char *error);
-char* send_valve_data(uint8_t no, uint8_t mode, const char *error);
-char* send_ph_data(uint8_t ph_cmd, uint8_t phTime, uint8_t phFactor, float phValue, float setK, float setB, const char *error);
 
 
 #endif // __USART_COMM_H

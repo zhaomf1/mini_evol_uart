@@ -698,6 +698,7 @@ int rs485_receive(uint8_t *data, uint16_t len, uint32_t timeout)
 int host_transmit(uint8_t *data, uint16_t len)
 {
     HAL_StatusTypeDef status = HAL_UART_Transmit_DMA(&huart1, data, len);
+    printf("[DEBUG] SEND UART data::\n%.*s\n", len, data);
     return (status == HAL_OK) ? 0 : -1;
 }
 

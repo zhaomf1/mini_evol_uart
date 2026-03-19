@@ -1,4 +1,6 @@
 mini_evol\usart_comm.o: ..\Core\Src\app\usart_comm.c
+mini_evol\usart_comm.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
+mini_evol\usart_comm.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 mini_evol\usart_comm.o: ..\Core\Inc\app\usart_comm.h
 mini_evol\usart_comm.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
 mini_evol\usart_comm.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
@@ -53,9 +55,9 @@ mini_evol\usart_comm.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2
 mini_evol\usart_comm.o: ..\Core\Inc\peripheral\usart.h
 mini_evol\usart_comm.o: ..\Core\Inc\common\cJSON.h
 mini_evol\usart_comm.o: ..\Core\Inc\common\cjson_pool.h
-mini_evol\usart_comm.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 mini_evol\usart_comm.o: ..\Core\Inc\app\json_key.h
 mini_evol\usart_comm.o: ..\Core\Inc\app\app_control.h
+mini_evol\usart_comm.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 mini_evol\usart_comm.o: ..\Core\Inc\app\dev_bldc_ctrl.h
 mini_evol\usart_comm.o: ..\Core\Inc\app\dev_od_ctrl.h
 mini_evol\usart_comm.o: ..\Core\Inc\app\dev_ph_ctrl.h

@@ -41,3 +41,11 @@ mini_evol\dev_od_ctrl.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h
 mini_evol\dev_od_ctrl.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 mini_evol\dev_od_ctrl.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 mini_evol\dev_od_ctrl.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
+mini_evol\dev_od_ctrl.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
+mini_evol\dev_od_ctrl.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
+mini_evol\dev_od_ctrl.o: ..\Core\Inc\peripheral\FreeRTOSConfig.h
+mini_evol\dev_od_ctrl.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
+mini_evol\dev_od_ctrl.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
+mini_evol\dev_od_ctrl.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
+mini_evol\dev_od_ctrl.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
+mini_evol\dev_od_ctrl.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h

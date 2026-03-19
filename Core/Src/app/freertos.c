@@ -53,7 +53,10 @@
 /* Definitions for defaultTask */
 //任务句柄
 osThreadId_t defaultTaskHandle;
-osThreadId_t uartCommTaskHandle;  //与上位机通讯任务句柄
+osThreadId_t uartCommTaskHandle;        //与上位机通讯任务句柄
+osThreadId_t timerTaskHandle;           //定时器任务
+osThreadId_t phCtrlTaskHandle;          //PH流程控制任务
+osThreadId_t appInitTaskHandle;         //应用初始化任务
 
 //消息队列句柄
 osMessageQueueId_t uartRxQueueHandle;   //串口接收消息队列
@@ -69,6 +72,24 @@ const osThreadAttr_t uartCommTask_attributes = {
     .name = "uartCommTask",
     // .stack_size = 128 * 4,
     .stack_size = 256 * 4,      //printf占用栈空间，先设置大点便于调试
+    .priority = (osPriority_t)osPriorityNormal,
+};
+
+const osThreadAttr_t timerTask_attributes = {
+    .name = "timerTask",
+    .stack_size =256,
+    .priority = (osPriority_t)osPriorityNormal,
+};
+
+const osThreadAttr_t phCtrlTask_attributes = {
+    .name = "phCtrlTask",
+    .stack_size =256 * 4,
+    .priority = (osPriority_t)osPriorityNormal,
+};
+
+const osThreadAttr_t appInitTask_attributes = {
+    .name = "appInitTask",
+    .stack_size = 128 * 4,
     .priority = (osPriority_t)osPriorityNormal,
 };
 
@@ -108,13 +129,16 @@ void MX_FREERTOS_Init(void)
     /* USER CODE END RTOS_TIMERS */
 
     /* USER CODE BEGIN RTOS_QUEUES */
-     uartRxQueueHandle = osMessageQueueNew(10, sizeof(UartMsg_t), NULL);    //创建串口接收消息队列
+     uartRxQueueHandle = osMessageQueueNew(10, sizeof(UartMsg_t), NULL);                    //创建串口接收消息队列
     /* USER CODE END RTOS_QUEUES */
 
     /* Create the thread(s) */
     /* creation of defaultTask */
-    defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
-    uartCommTaskHandle = osThreadNew(uart_comm_task, NULL, &uartCommTask_attributes);    //创建与上位机通讯任务
+    defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);       //创建默认任务
+    uartCommTaskHandle = osThreadNew(uart_comm_task, NULL, &uartCommTask_attributes);       //创建与上位机通讯任务
+    timerTaskHandle = osThreadNew(TimerTask, NULL, &timerTask_attributes);                  //定时器任务
+    phCtrlTaskHandle = osThreadNew(phControlTask, NULL, &phCtrlTask_attributes);            //ph流程任务
+    appInitTaskHandle = osThreadNew(appInitTask, NULL, &appInitTask_attributes);            //应用初始化任务
     /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
     /* USER CODE END RTOS_THREADS */
@@ -135,8 +159,8 @@ void StartDefaultTask(void *argument)
 {
     /* USER CODE BEGIN StartDefaultTask */
     uint8_t first_enter = 1;
+    uint16_t step_cnt = 0;
     uint16_t color_cnt = 0;
-    uint16_t time_cnt = 0;
 
 
     /* Infinite loop */
@@ -229,36 +253,26 @@ void StartDefaultTask(void *argument)
 
         //RGB测试程序
         {
-            #if 1
-
+            #if 0
             if(color_cnt%3 == 0)
             {
                 rgb_set_color((RgbColor_t)RGB_RED);
-                printf("R\n");
             }
             else if(color_cnt%3 == 1)
             {
                 rgb_set_color((RgbColor_t)RGB_GREEN);
-                printf("G\n");
             }
             else if(color_cnt%3 == 2)
             {
                 rgb_set_color((RgbColor_t)RGB_BLUE);
-                printf("B\n");
             }
 
             color_cnt++;
-
+            if(color_cnt >= 1000)
+                color_cnt = 0;
             #endif
         }
 
-        //延时初始化无刷电机
-        if(time_cnt == 1)
-        {
-            extern void bldc_init(void);
-            bldc_init();
-        }
-        time_cnt++;
 
         first_enter = 0;
         

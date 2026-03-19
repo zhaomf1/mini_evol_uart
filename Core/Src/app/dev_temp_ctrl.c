@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "dev_temp_ctrl.h"
 #include "modbus_rtu.h"
 #include "app_control.h"
@@ -57,6 +58,7 @@ int temp_ctrl_read_alarm(void)
     int bit2 = (reg & 0x04) >> 2; 
     int bit3 = (reg & 0x08) >> 3;
 
+#if 1
     printf("alarm info: reg = %02X\n",reg);
 
     if(bit0 == 1){
@@ -68,6 +70,7 @@ int temp_ctrl_read_alarm(void)
     } else if(bit3 == 1){
         printf("探头没接");
     }
+#endif
 
     return ret;
 }
@@ -84,3 +87,12 @@ int temp_ctrl_set_timeout(uint16_t second)
     return ret;
 }
 
+
+/**
+ * @brief 初始化温控设备,上电初始化一次
+ * @return  
+ */
+void dev_temp_init(void)
+{
+    temp_ctrl_set_timeout(3600);
+}

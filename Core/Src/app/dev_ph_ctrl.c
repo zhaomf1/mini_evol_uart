@@ -1,3 +1,5 @@
+#include <string.h>
+#include <stdio.h>
 #include "dev_ph_ctrl.h"
 #include "modbus_rtu.h"
 #include "app_control.h"

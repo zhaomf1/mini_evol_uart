@@ -16,6 +16,7 @@ int temp_ctrl_set_temperature(uint16_t temperature);
 int temp_ctrl_read_temperature(uint16_t *temperature);
 int temp_ctrl_read_alarm(void);
 int temp_ctrl_set_timeout(uint16_t second);
+void dev_temp_init(void);
 
 
 #endif

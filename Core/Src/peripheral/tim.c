@@ -28,6 +28,7 @@ TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim5;
 
 /* TIM1 init function */
 void MX_TIM1_Init(void)
@@ -480,7 +481,7 @@ void TIM1_Init(uint16_t Speed_1)
 
   /* USER CODE END TIM2_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 2099;
+  htim1.Init.Prescaler = 4199;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim1.Init.Period = Speed_1;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -641,7 +642,7 @@ void TIM4_Init(uint16_t Speed_1)
 
   /* USER CODE END TIM2_Init 1 */
   htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 2099;
+  htim4.Init.Prescaler = 328;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim4.Init.Period = Speed_1;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -670,6 +671,18 @@ void TIM4_Init(uint16_t Speed_1)
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+    if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
   {
     Error_Handler();
   }
