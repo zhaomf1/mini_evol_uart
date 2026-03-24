@@ -81,6 +81,13 @@ typedef enum {
     PH_ALKALI       //碱因子
 } PhFactor_t;
 
+typedef enum {
+    INIT_SYS_READY,
+    INIT_BLDC_PENDING,
+    INIT_TEMP_PENDING,
+    INIT_ALL_DONE
+} InitState_t;
+
 // 定义一些常用颜色
 #define RGB_RED     {255, 0, 0}
 #define RGB_GREEN   {0, 255, 0}

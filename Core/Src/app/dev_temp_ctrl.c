@@ -90,9 +90,13 @@ int temp_ctrl_set_timeout(uint16_t second)
 
 /**
  * @brief 初始化温控设备,上电初始化一次
- * @return  
+ * @return  0 成功 -1 失败
  */
-void dev_temp_init(void)
+int dev_temp_init(void)
 {
-    temp_ctrl_set_timeout(3600);
+    if(temp_ctrl_set_timeout(3600) != 0)
+    {
+        return -1;
+    }
+    return 0;
 }

@@ -149,6 +149,10 @@ TIM_HandleTypeDef *get_motor_tim(StepMotorId_t id)
     {
         return &htim3;
     }
+    else if(id == STEP_MOTOR_RESERVED)
+    {
+        return &htim4;
+    }
 	
 	return NULL;
 }
@@ -186,6 +190,10 @@ void step_motor_control(StepMotorId_t id, StepMotorCmd_t cmd, uint16_t value)
         {
             //获取定时器句柄
             TIM_HandleTypeDef *htim = get_motor_tim(id);
+            if(htim == NULL)
+            {
+                return;
+            }
             //计算自动重装载值
             if(id == STEP_MOTOR_RESERVED)
             {
@@ -329,7 +337,7 @@ void TimerTask(void *pvParameters)
             }
         }
 
-        vTaskDelay(pdMS_TO_TICKS(10));  // 10ms 检查一次
+        osDelay(10);  // 10ms 检查一次
     }
 }
 
@@ -409,22 +417,75 @@ void phControlTask(void *pvParameters)
             set_step_motor_step_number(STEP_MOTOR_PH,run_time);
             printf("PH control: current _ph = %f,ph_diff = %f, run_time = %dms\n",curr_ph,ph_diff,run_time);
             // 4.等待一段时间，PH值稳定下来后，再次测量PH值，重复以上流程
-            vTaskDelay(pdMS_TO_TICKS(ph_ctrl.ph_time*1000));
-
-
+            osDelay(ph_ctrl.ph_time*1000);
         }
-        vTaskDelay(pdMS_TO_TICKS(50));
+
+        osDelay(50);
     }
 }
 
 //APP初始化任务，电机
 void appInitTask(void *pvParameters)
 {
-    osDelay(100); //等待系统初始化完成
+    osDelay(200); //等待系统初始化完成
 
-    dev_bldc_init();
-    dev_temp_init();
+    InitState_t state = INIT_BLDC_PENDING;
+    int ret = 0;
+    int retry_count = 0;
+    const int MAX_RETRY = 3; // 最大重试次数
 
-    extern osThreadId_t appInitTaskHandle;
-    osThreadTerminate(appInitTaskHandle); 
+    while (1)
+    {
+        switch (state)
+        {
+            case INIT_BLDC_PENDING:
+                printf("Initializing BLDC...\r\n");
+                ret = dev_bldc_init();
+                if (ret == 0) {
+                    printf("BLDC Init OK.\r\n");
+                    state = INIT_TEMP_PENDING; // 成功，进入下一项
+                    retry_count = 0; // 重置重试计数器
+                } else {
+                    retry_count++;
+                    printf("BLDC Init Failed! Retry %d/%d\r\n", retry_count, MAX_RETRY);
+                    if (retry_count >= MAX_RETRY) {
+                        // 达到最大重试次数，进入错误处理（例如死机或报警）
+                        printf("FATAL: BLDC Init Failed Permanently!\r\n");
+                        // Error_Handler(); // 或者挂起任务
+                        state = INIT_TEMP_PENDING; // 跳过此项，初始化下一项（视策略而定）
+                        retry_count = 0; // 重置重试计数器
+                    }
+                }
+                break;
+
+            case INIT_TEMP_PENDING:
+                printf("Initializing Temp Ctrl...\r\n");
+                ret = dev_temp_init(); 
+                if (ret == 0) {
+                    printf("Temp Ctrl Init OK.\r\n");
+                    state = INIT_ALL_DONE; // 全部完成
+                } else {
+                    retry_count++;
+                    printf("Temp Init Failed! Retry %d/%d\r\n", retry_count, MAX_RETRY);
+                    if (retry_count >= MAX_RETRY) {
+                         // 处理错误
+                        state = INIT_ALL_DONE; // 跳过
+                    }
+                }
+                break;
+
+            case INIT_ALL_DONE:
+                printf("System Initialization Complete.\r\n");
+                // 初始化完成，销毁任务
+                vTaskDelete(NULL);
+                return;
+
+            default:
+                break;
+        }
+
+        /* 4. 循环延时 */
+        // 如果初始化失败，不要立即重试，给系统一点喘息时间
+        osDelay(500); 
+    }
 }

@@ -12,6 +12,7 @@
 #include "dev_od_ctrl.h"
 #include "dev_ph_ctrl.h"
 #include "dev_temp_ctrl.h"
+#include "error_code.h"
 
 
 // ====================== 工具函数 ======================
@@ -375,6 +376,8 @@ static void parse_bldc_motor(cJSON *root, SysCtrlCmd_t *cmd) {
         return;
     }
 
+    const char *error = NULL;
+
     // 直接解析数值字段
     cmd->data.bldc_motor.no = (uint8_t)safe_get_json_number(motor_data, JSON_KEY_DATA_NO, 0);
     cmd->data.bldc_motor.speed = (uint16_t)safe_get_json_number(motor_data, JSON_KEY_MOTOR_DATA_SPEED, 0);
@@ -386,11 +389,18 @@ static void parse_bldc_motor(cJSON *root, SysCtrlCmd_t *cmd) {
             //设置转速,速度设置为0代表关闭
             if(cmd->data.bldc_motor.mode == MOTOR_MODE_CW_KEEP)
             {
-                bldc_ctrl_set_speed(MODBUS_ADDR_TRAIN_BLDC,cmd->data.bldc_motor.speed);
+                if(0 != bldc_ctrl_set_speed(MODBUS_ADDR_TRAIN_BLDC,cmd->data.bldc_motor.speed))
+                {
+                    error = BLDC_SET_SPEED_ERROR;
+                }
+
             }
             else if(cmd->data.bldc_motor.mode == MOTOR_MODE_STOP)
             {
-                bldc_ctrl_set_speed(MODBUS_ADDR_TRAIN_BLDC,0);
+                if(0 != bldc_ctrl_set_speed(MODBUS_ADDR_TRAIN_BLDC,0))
+                {
+                    error = BLDC_CLOSE_ERROR;
+                }
             }
 
 
@@ -399,21 +409,25 @@ static void parse_bldc_motor(cJSON *root, SysCtrlCmd_t *cmd) {
             //设置转速,速度设置为0代表关闭
             if(cmd->data.bldc_motor.mode == MOTOR_MODE_CW_KEEP)
             {
-                bldc_ctrl_set_speed(MODBUS_ADDR_FEEDING_BLDC,cmd->data.bldc_motor.speed);
+                if(0 != bldc_ctrl_set_speed(MODBUS_ADDR_FEEDING_BLDC,cmd->data.bldc_motor.speed))
+                {
+                    error = BLDC_SET_SPEED_ERROR;
+                }
             }
             else if(cmd->data.bldc_motor.mode == MOTOR_MODE_STOP)
             {
-                bldc_ctrl_set_speed(MODBUS_ADDR_FEEDING_BLDC,0);
+                if(bldc_ctrl_set_speed(MODBUS_ADDR_FEEDING_BLDC,0))
+                {
+                    error = BLDC_CLOSE_ERROR;
+                }
             }
 
             break;
         default:
             break;
     }
-
     //上报数据给上位机
-    send_bldc_data(cmd->data.bldc_motor.no,cmd->data.bldc_motor.speed,cmd->data.bldc_motor.mode,NULL);
-
+    send_bldc_data(cmd->data.bldc_motor.no,cmd->data.bldc_motor.speed,cmd->data.bldc_motor.mode,error);
 }
 
 /**
@@ -553,6 +567,8 @@ static void parse_ph_board(cJSON *root, SysCtrlCmd_t *cmd) {
         return;
     }
 
+    const char *error = NULL;
+
     cmd->data.ph_board.ph_cmd = (uint8_t)safe_get_json_number(ph_data, JSON_KEY_PH_CMD, 0);
     cmd->data.ph_board.phTime = (uint8_t)safe_get_json_number(ph_data, JSON_KEY_PH_TIME, 0);
     cmd->data.ph_board.phFactor = (uint8_t)safe_get_json_number(ph_data, JSON_KEY_PH_FACTOR, 0);
@@ -583,10 +599,14 @@ static void parse_ph_board(cJSON *root, SysCtrlCmd_t *cmd) {
         float ph_k = 0;
         float ph_b = 0;
         int ret = ph_ctrl_read_value(&ph);
+        if(ret != 0)
+        {
+            error = PH_GET_ERROR;
+        }
         get_ph_kb_value(&ph_k,&ph_b);
         ph = ph_k * ph + ph_b;
 
-        send_ph_data( cmd->data.ph_board.ph_cmd, cmd->data.ph_board.phTime,cmd->data.ph_board.phFactor,ph,cmd->data.ph_board.setK,cmd->data.ph_board.setB,NULL);
+        send_ph_data( cmd->data.ph_board.ph_cmd, cmd->data.ph_board.phTime,cmd->data.ph_board.phFactor,ph,cmd->data.ph_board.setK,cmd->data.ph_board.setB,error);
 
         
     }
@@ -608,14 +628,18 @@ static void parse_od_board(cJSON *root, SysCtrlCmd_t *cmd) {
     if (!od_data || !cJSON_IsObject(od_data)) {
         return;
     }
+    const char *error = NULL;
 
     cmd->data.od_board.odValue = (uint16_t)safe_get_json_number(od_data, JSON_KEY_OD_VALUE, 0);
 
     //获取OD值
     uint16_t od_value = 0;
-    od_ctrl_read_value(&od_value);
+    if(0 != od_ctrl_read_value(&od_value))
+    {
+        error = OD_GET_ERROR;
+    }
 
-    send_od_data(od_value,NULL);
+    send_od_data(od_value,error);
 }
 
 /**
@@ -626,6 +650,7 @@ static void parse_temperature(cJSON *root, SysCtrlCmd_t *cmd) {
     if (!temp_data || !cJSON_IsObject(temp_data)) {
         return;
     }
+    const char *error = NULL;
 
     cmd->data.temperature_board.temperature_cmd = (uint8_t)safe_get_json_number(temp_data, JSON_KEY_TEMP_CMD, 0);
     cmd->data.temperature_board.temperatureValue = (float)safe_get_json_number(temp_data, JSON_KEY_TEMP_VALUE, 0.0f);
@@ -634,22 +659,34 @@ static void parse_temperature(cJSON *root, SysCtrlCmd_t *cmd) {
     if(cmd->data.temperature_board.temperature_cmd == TEMP_CTRL_OPEN)
     {
         uint16_t temp_set = (uint16_t)(cmd->data.temperature_board.temperatureValue * 100);
-        temp_ctrl_set_temperature(temp_set);
+        if(0 != temp_ctrl_set_temperature(temp_set))
+        {
+            error = TEMP_SET_ERROR;
+        }
         
-        temp_ctrl_switch_ctrl_temperature(1);
-        send_temp_data(cmd->data.temperature_board.temperature_cmd,cmd->data.temperature_board.temperatureValue,NULL);
+        if(0 != temp_ctrl_switch_ctrl_temperature(1))
+        {
+            error = TEMP_SET_ERROR;
+        }
+        send_temp_data(cmd->data.temperature_board.temperature_cmd,cmd->data.temperature_board.temperatureValue,error);
     }   //关闭温控模块
     else if(cmd->data.temperature_board.temperature_cmd == TEMP_CTRL_CLOSE)
     {
-        temp_ctrl_switch_ctrl_temperature(0);
-        send_temp_data(cmd->data.temperature_board.temperature_cmd,0,NULL);
+        if(0 != temp_ctrl_switch_ctrl_temperature(0))
+        {
+            error = TEMP_SET_ERROR;
+        }
+        send_temp_data(cmd->data.temperature_board.temperature_cmd,0,error);
     }   //获取当前温度值
     else if(cmd->data.temperature_board.temperature_cmd == TEMP_CTRL_GET)
     {
         uint16_t temp_get = 0;
-        temp_ctrl_read_temperature(&temp_get);
+        if(0 != temp_ctrl_read_temperature(&temp_get))
+        {
+            error = TEMP_GET_ERROR;
+        }
         float f_temp = (float)temp_get / 100.0f;
-        send_temp_data(cmd->data.temperature_board.temperature_cmd,f_temp,NULL);
+        send_temp_data(cmd->data.temperature_board.temperature_cmd,f_temp,error);
     }
 
 }

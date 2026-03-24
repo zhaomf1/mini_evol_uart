@@ -14,6 +14,7 @@
 int bldc_ctrl_enable(void)
 {
     int ret = modbus_write_single_register(MODBUS_ADDR_TRAIN_BLDC, 0x00B6, 1);
+    osDelay(50);
     ret |= modbus_write_single_register(MODBUS_ADDR_FEEDING_BLDC, 0x00B6, 1);
     printf("ctrl enable ret = %02x\n",ret);
     return ret;
@@ -28,6 +29,7 @@ int bldc_ctrl_enable(void)
 int bldc_ctrl_set_protocol_trans(uint16_t trans)
 {
     int ret = modbus_write_single_register(MODBUS_ADDR_TRAIN_BLDC, 0x0040, trans);
+    osDelay(50);
     ret |= modbus_write_single_register(MODBUS_ADDR_FEEDING_BLDC, 0x0040, trans);
     printf("protocol ret = %02x\n",ret);
     return ret;
@@ -41,6 +43,7 @@ int bldc_ctrl_set_protocol_trans(uint16_t trans)
 int bldc_ctrl_set_dir(uint16_t dir)
 {
     int ret = modbus_write_single_register(MODBUS_ADDR_TRAIN_BLDC, 0x006D, dir);
+    osDelay(50);
     ret |= modbus_write_single_register(MODBUS_ADDR_FEEDING_BLDC, 0x006D, dir);
     printf("dir ret = %02x\n",ret);
     return ret;
@@ -54,6 +57,7 @@ int bldc_ctrl_set_dir(uint16_t dir)
 int bldc_ctrl_set_speed_up_time(uint16_t time)
 {
     int ret = modbus_write_single_register(MODBUS_ADDR_TRAIN_BLDC, 0x008A, time);
+    osDelay(50);
     ret |= modbus_write_single_register(MODBUS_ADDR_FEEDING_BLDC, 0x008A, time);
     printf("speed up ret = %02x\n",ret);
     return ret;
@@ -67,6 +71,7 @@ int bldc_ctrl_set_speed_up_time(uint16_t time)
 int bldc_ctrl_set_slow_down_time(uint16_t time)
 {
     int ret = modbus_write_single_register(MODBUS_ADDR_TRAIN_BLDC, 0x008C, time);
+    osDelay(50);
     ret |= modbus_write_single_register(MODBUS_ADDR_FEEDING_BLDC, 0x008C, time);
     printf("slow time ret = %02x\n",ret);
     return ret;
@@ -80,6 +85,7 @@ int bldc_ctrl_set_slow_down_time(uint16_t time)
 int bldc_ctrl_switch(uint16_t switch_ctrl)
 {
     int ret = modbus_write_single_register(MODBUS_ADDR_TRAIN_BLDC, 0x006A, switch_ctrl);
+    osDelay(50);
     ret |= modbus_write_single_register(MODBUS_ADDR_FEEDING_BLDC, 0x006A, switch_ctrl);
     printf("switch ret = %02x\n",ret);
     return ret;
@@ -100,14 +106,44 @@ int bldc_ctrl_set_speed(ModbusAddr_t bldc_addr,uint16_t speed)
 
 /**
  * @brief 直流无刷电机初始化，上电初始化一次
- * @return 
+ * @return 0：成功，-1：失败
  */
-void dev_bldc_init(void)
+int dev_bldc_init(void)
 {
-    bldc_ctrl_enable();
-    bldc_ctrl_set_protocol_trans(0);
-    bldc_ctrl_set_dir(0);
-    bldc_ctrl_set_speed_up_time(8);
-    bldc_ctrl_set_slow_down_time(8);
-    bldc_ctrl_switch(1);
+    if (bldc_ctrl_enable() != 0)
+    {
+        return -1;
+    }
+    osDelay(10);
+    
+    if (bldc_ctrl_set_protocol_trans(0) != 0)
+    {
+        return -1;
+    }
+    osDelay(10);
+    
+    if (bldc_ctrl_set_dir(0) != 0)
+    {
+        return -1;
+    }
+    osDelay(10);
+    
+    if (bldc_ctrl_set_speed_up_time(8) != 0) 
+    {
+        return -1;
+    }
+    osDelay(10);
+    
+    if (bldc_ctrl_set_slow_down_time(8) != 0)
+    {
+        return -1;
+    }
+    osDelay(10);
+    
+    if (bldc_ctrl_switch(1) != 0)
+    {
+        return -1;
+    }
+    
+    return 0; // 全部成功
 }

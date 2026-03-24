@@ -11,6 +11,6 @@ int bldc_ctrl_switch(uint16_t switch_ctrl);
 int bldc_ctrl_set_speed_up_time(uint16_t time);
 int bldc_ctrl_set_slow_down_time(uint16_t time);
 int bldc_ctrl_set_protocol_trans(uint16_t trans);
-void dev_bldc_init(void);
+int dev_bldc_init(void);
 
 #endif

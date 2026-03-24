@@ -213,7 +213,6 @@ void StartDefaultTask(void *argument)
             if(cnt >= 2500)
                 cnt = 0;
 
-            osDelay(100);
             #endif
         }
         
