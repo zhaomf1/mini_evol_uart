@@ -128,7 +128,7 @@ void air_supply_valve_off(void);
 //电机控制
 void step_motor_init(void);
 void step_motor_control(StepMotorId_t id, StepMotorCmd_t cmd, uint16_t value);
-void set_step_motor_step_number(StepMotorId_t id, uint16_t steps);
+void set_step_motor_step_number(StepMotorId_t id, uint32_t steps);
 void TimerTask(void *pvParameters); // 定时器任务
 void appInitTask(void *pvParameters); //初始化任务
 void StartTimer(uint8_t func_id, uint32_t timeout_ms);

@@ -258,8 +258,9 @@ void rgb_switch_ctrl(uint8_t state)
 }
 
 //设置步进电机步数,运行时间 = 步数/频率 单位ms
-void set_step_motor_step_number(StepMotorId_t id, uint16_t steps)
+void set_step_motor_step_number(StepMotorId_t id, uint32_t steps)
 {
+    printf("id%d start,time %ld\n",id, steps);
     StartTimer(id, steps);
 }
 
@@ -315,6 +316,7 @@ void TimerTask(void *pvParameters)
                         case STEP_MOTOR_PH: 
                             step_motor_control(STEP_MOTOR_PH, STEP_MOTOR_CMD_SWITCH, STEP_MOTOR_DISABLE);
                             StopTimer(STEP_MOTOR_PH);
+                            printf("id%d stop",STEP_MOTOR_PH);
 
                         break;
                         case STEP_MOTOR_FEED:
@@ -337,7 +339,7 @@ void TimerTask(void *pvParameters)
             }
         }
 
-        osDelay(10);  // 10ms 检查一次
+        osDelay(100);  // 100ms 检查一次
     }
 }
 
@@ -484,8 +486,7 @@ void appInitTask(void *pvParameters)
                 break;
         }
 
-        /* 4. 循环延时 */
-        // 如果初始化失败，不要立即重试，给系统一点喘息时间
+
         osDelay(500); 
     }
 }

@@ -20,7 +20,9 @@ typedef enum {
     CMD_PH_BOARD,         // PH板
     CMD_OD_BOARD,         // OD板
     CMD_TEMPERATURE,      // 温控
-    CMD_RGB_LIGHT,         // RGB灯
+    CMD_RGB_LIGHT,        // RGB灯
+    CMD_VERSION,          // 版本号查询
+
 
     CMD_UNKNOWN = 0xFF,    // 未知指令
 } CmdType_t;
@@ -53,7 +55,7 @@ typedef struct {
 typedef struct {
     uint8_t no;         // 电机序号
     uint16_t speed;      // 转速
-    uint16_t step;       // 步数
+    uint32_t step;       // 步数
     uint8_t mode;        // 0-正转，1-反转，2-持续正转，3-持续反转，4-停止
 } StepMotorData_t;
 
@@ -64,8 +66,8 @@ typedef struct {
 } ValveData_t;
 
 typedef enum{
-    VALVE_OPEN = 0,              // 开
-    VALVE_CLOSE = 0XFF,          // 关
+    VALVE_OPEN = 0XFF,              // 开
+    VALVE_CLOSE = 0,          // 关
 }ValveState_t;
 
 // PH板数据结构
@@ -97,6 +99,11 @@ typedef struct {
     uint8_t mode;       // 0x00关，0xFF开
 } RGBLightData_t;
 
+// 版本信息
+typedef struct {
+    uint8_t version[50];
+} VersionInfo_t;
+
 
 // 顶层指令结构（包含所有类型）
 typedef struct {
@@ -110,6 +117,7 @@ typedef struct {
         OdData_t od_board;
         TemperatureData_t temperature_board;
         RGBLightData_t rgb_light;
+        VersionInfo_t version_info;
     } data;
 } SysCtrlCmd_t;
 

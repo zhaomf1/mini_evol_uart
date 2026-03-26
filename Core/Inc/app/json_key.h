@@ -24,6 +24,8 @@
 #define JSON_KEY_RGB_SET_R               "r"                    //R值设置
 #define JSON_KEY_RGB_SET_G               "g"                    //G值设置
 #define JSON_KEY_RGB_SET_B               "b"                    //B值设置
+#define JSON_KEY_FIRMWARE_VERSION        "firmware_version"     //固件信息
+#define JSON_KEY_SOFTWARE_VERSION        "software_version"     //软件信息
 #define JSON_KEY_ERROR                   "error"                //报警信息
 
 

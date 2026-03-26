@@ -111,7 +111,7 @@ int main(void)
     MX_USART3_UART_Init();
     MX_USART6_UART_Init();
     /* USER CODE BEGIN 2 */
-    printf("system start\n");
+    printf("system start,firmware_version:%s\r\n",FIRMWARE_VERSION);
     cjson_pool_init();		//cjson内存池初始化
     uart_dma_init();        //DMA初始化
     step_motor_init();      //步进电机初始化

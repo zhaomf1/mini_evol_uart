@@ -27,23 +27,14 @@ Project File Date:  03/18/2026
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 1 (build 61)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'mini_evol'
-compiling freertos.c...
-..\Core\Src\app\freertos.c(161): warning:  #550-D: variable "first_enter" was set but never used
-      uint8_t first_enter = 1;
-..\Core\Src\app\freertos.c(162): warning:  #177-D: variable "step_cnt" was declared but never referenced
-      uint16_t step_cnt = 0;
-..\Core\Src\app\freertos.c(163): warning:  #177-D: variable "color_cnt" was declared but never referenced
-      uint16_t color_cnt = 0;
-..\Core\Src\app\freertos.c: 3 warnings, 0 errors
-compiling stm32f4xx_it.c...
 compiling usart_comm.c...
-..\Core\Inc\app\error_code.h(20): warning:  #1-D: last line of file ends without a newline
-  #endif
+..\Core\Src\app\usart_comm.c(842): warning:  #111-D: statement is unreachable
+              break;
 ..\Core\Src\app\usart_comm.c: 1 warning, 0 errors
 linking...
-Program Size: Code=46520 RO-data=1668 RW-data=272 ZI-data=27744  
+Program Size: Code=46944 RO-data=1668 RW-data=272 ZI-data=27744  
 FromELF: creating hex file...
-"mini_evol\mini_evol.axf" - 0 Error(s), 4 Warning(s).
+"mini_evol\mini_evol.axf" - 0 Error(s), 1 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -61,7 +52,7 @@ Package Vendor: ARM
 <h2>Collection of Component Files used:</h2>
 
    * Component: ARM::CMSIS:CORE:4.3.0
-Build Time Elapsed:  00:00:05
+Build Time Elapsed:  00:00:02
 </pre>
 </body>
 </html>

@@ -91,7 +91,7 @@ char* send_bldc_data(uint8_t no, uint16_t speed, uint8_t mode, const char *error
 /**
  * 步进电机JSON封装（cmd=1，用宏定义键名）
  */
-char* send_steo_motor_data(uint8_t no, uint16_t speed, uint16_t step, uint8_t mode, const char *error)
+char* send_steo_motor_data(uint8_t no, uint16_t speed, uint32_t step, uint8_t mode, const char *error)
 {
     // 1. 创建JSON根对象
     cJSON *root = cJSON_CreateObject();
@@ -363,7 +363,48 @@ char* send_rgb_data(uint8_t r, uint8_t g, uint8_t b, uint8_t mode, const char *e
     return json_str;
 }
 
+/**
+ * 固件版本JSON封装（cmd=7，用宏定义键名）
+ */
+char* send_firmware_version_data(const char *software_version, const char *error) {
+    // 1. 创建JSON根对象
+    cJSON *root = cJSON_CreateObject();
+    if (root == NULL) {
+        return json_error_handler(root);
+    }
 
+    // 2. 添加cmd字段（固件版本=7，宏定义键名JSON_KEY_CMD）
+    if (!cJSON_AddNumberToObject(root, JSON_KEY_CMD, CMD_VERSION)) {
+        return json_error_handler(root);
+    }
+
+    // 3. 创建firmware_version子对象（宏定义键名JSON_KEY_FIRMWARE_VERSION）
+    cJSON *firmware_version = cJSON_CreateObject();
+    if (firmware_version == NULL) {
+        return json_error_handler(root);
+    }
+    cJSON_AddItemToObject(root, JSON_KEY_FIRMWARE_VERSION, firmware_version);
+
+    // 4. 填充firmware_version字段（宏定义键名）
+    if (!cJSON_AddStringToObject(firmware_version, JSON_KEY_SOFTWARE_VERSION, software_version)) {
+        return json_error_handler(root);
+    }
+
+    // 5. 最后添加error字段（宏定义键名JSON_KEY_ERROR）
+    const char *error_str = (error != NULL) ? error : "";
+    if (!cJSON_AddStringToObject(root, JSON_KEY_ERROR, error_str)) {
+        return json_error_handler(root);
+    }
+
+    // 6. 生成带格式的JSON字符串（便于调试）
+    char *json_str = cJSON_Print(root);
+    uint16_t json_len = strlen(json_str);
+    host_transmit((uint8_t *)json_str, json_len);
+
+    cJSON_Delete(root);
+    cjson_pool_reset();
+    return json_str;
+}
 
 
 // ====================== 各指令解析函数 ======================
@@ -438,26 +479,27 @@ static void parse_step_motor(cJSON *root, SysCtrlCmd_t *cmd) {
     if (!motor_data || !cJSON_IsObject(motor_data)) {
         return;
     }
-    uint16_t steptime = 0;
+    uint32_t steptime = 0;
 
     cmd->data.stepp_motor.no = (uint8_t)safe_get_json_number(motor_data, JSON_KEY_DATA_NO, 0);
     cmd->data.stepp_motor.speed = (uint16_t)safe_get_json_number(motor_data, JSON_KEY_MOTOR_DATA_SPEED, 0);
-    cmd->data.stepp_motor.step = (uint16_t)safe_get_json_number(motor_data, JSON_KEY_MOTOR_DATA_STEP, 0);
+    cmd->data.stepp_motor.step = (uint32_t)safe_get_json_number(motor_data, JSON_KEY_MOTOR_DATA_STEP, 0);
     cmd->data.stepp_motor.mode = (uint8_t)safe_get_json_number(motor_data, JSON_KEY_DATA_MODE, 0);
+    // printf("speed:%ld,step:%ld,mode:%ld\r\n",cmd->data.stepp_motor.speed,cmd->data.stepp_motor.step,cmd->data.stepp_motor.mode);
 
     //控制电机
     if(cmd->data.stepp_motor.mode == MOTOR_MODE_CW)         //正转步数
     {
         step_motor_control((StepMotorId_t)cmd->data.stepp_motor.no,STEP_MOTOR_CMD_SWITCH,STEP_MOTOR_ENABLE);
         step_motor_control((StepMotorId_t)cmd->data.stepp_motor.no,STEP_MOTOR_CMD_DIR,STEP_MOTOR_FOREWARD);
-        steptime = (uint16_t)((float)cmd->data.stepp_motor.step / (float)cmd->data.stepp_motor.speed * 1000);
+        steptime = (uint32_t)((float)cmd->data.stepp_motor.step / (float)cmd->data.stepp_motor.speed * 1000);
         set_step_motor_step_number((StepMotorId_t)cmd->data.stepp_motor.no,steptime);
     }
     else if (cmd->data.stepp_motor.mode == MOTOR_MODE_CCW)   //反转步数
     {
         step_motor_control((StepMotorId_t)cmd->data.stepp_motor.no,STEP_MOTOR_CMD_SWITCH,STEP_MOTOR_ENABLE);
         step_motor_control((StepMotorId_t)cmd->data.stepp_motor.no,STEP_MOTOR_CMD_DIR,STEP_MOTOR_REVERSES);
-        steptime = (uint16_t)((float)cmd->data.stepp_motor.step / (float)cmd->data.stepp_motor.speed * 1000);
+        steptime = (uint32_t)((float)cmd->data.stepp_motor.step / (float)cmd->data.stepp_motor.speed * 1000);
         set_step_motor_step_number((StepMotorId_t)cmd->data.stepp_motor.no,steptime);
     }
     else if (cmd->data.stepp_motor.mode == MOTOR_MODE_CW_KEEP)   //持续正转
@@ -478,6 +520,7 @@ static void parse_step_motor(cJSON *root, SysCtrlCmd_t *cmd) {
     //设置电机转速
     step_motor_control((StepMotorId_t)cmd->data.stepp_motor.no,STEP_MOTOR_CMD_SPEED,cmd->data.stepp_motor.speed);
 
+    // printf("speed:%ld,step:%ld,mode:%ld\r\n",cmd->data.stepp_motor.speed,cmd->data.stepp_motor.step,cmd->data.stepp_motor.mode);
     //上报上位机
     send_steo_motor_data(cmd->data.stepp_motor.no,cmd->data.stepp_motor.speed,cmd->data.stepp_motor.step,cmd->data.stepp_motor.mode,NULL);
 
@@ -724,6 +767,21 @@ static void parse_rgb_light(cJSON *root, SysCtrlCmd_t *cmd) {
 
 }
 
+/**
+ * @brief 解析版本上报指令
+ */
+static void parse_version_info(cJSON *root, SysCtrlCmd_t *cmd) {
+    cJSON *version_data = cJSON_GetObjectItem(root, JSON_KEY_FIRMWARE_VERSION);
+    if (!version_data || !cJSON_IsObject(version_data)) {
+        return;
+    }
+
+    cJSON *item = cJSON_GetObjectItem(version_data, JSON_KEY_SOFTWARE_VERSION);
+    if (item && cJSON_IsString(item)) {
+        send_firmware_version_data(FIRMWARE_VERSION, "NULL");
+    }
+}
+
 
 
 // ====================== 顶层解析函数 ======================
@@ -776,6 +834,11 @@ int parse_motor_ctrl_json(const char *json_str, SysCtrlCmd_t *cmd) {
         case CMD_RGB_LIGHT:
             cmd->cmd_type = CMD_RGB_LIGHT;
             parse_rgb_light(root, cmd);
+            break;
+        case CMD_VERSION:
+            cmd->cmd_type = CMD_VERSION;
+            parse_version_info(root, cmd);
+            break;
             break;
         default:
             cJSON_Delete(root);

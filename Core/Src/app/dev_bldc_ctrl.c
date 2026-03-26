@@ -110,40 +110,41 @@ int bldc_ctrl_set_speed(ModbusAddr_t bldc_addr,uint16_t speed)
  */
 int dev_bldc_init(void)
 {
+    int ret = 0;
     if (bldc_ctrl_enable() != 0)
     {
-        return -1;
+        ret =  -1;
     }
     osDelay(10);
     
     if (bldc_ctrl_set_protocol_trans(0) != 0)
     {
-        return -1;
+        ret =  -1;
     }
     osDelay(10);
     
     if (bldc_ctrl_set_dir(0) != 0)
     {
-        return -1;
+        ret = -1;
     }
     osDelay(10);
     
     if (bldc_ctrl_set_speed_up_time(8) != 0) 
     {
-        return -1;
+        ret =  -1;
     }
     osDelay(10);
     
     if (bldc_ctrl_set_slow_down_time(8) != 0)
     {
-        return -1;
+        ret =  -1;
     }
     osDelay(10);
     
     if (bldc_ctrl_switch(1) != 0)
     {
-        return -1;
+        ret = -1;
     }
     
-    return 0; // 全部成功
+    return ret; // 全部成功
 }
