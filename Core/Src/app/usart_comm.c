@@ -763,7 +763,7 @@ static void parse_rgb_light(cJSON *root, SysCtrlCmd_t *cmd) {
         rgb_switch_ctrl(VALVE_CLOSE);
     }
 
-    send_rgb_data(cmd->data.rgb_light.r,cmd->data.rgb_light.g,cmd->data.rgb_light.b,cmd->data.rgb_light.mode,"NULL");
+    send_rgb_data(cmd->data.rgb_light.r,cmd->data.rgb_light.g,cmd->data.rgb_light.b,cmd->data.rgb_light.mode,NULL);
 
 }
 
@@ -778,7 +778,7 @@ static void parse_version_info(cJSON *root, SysCtrlCmd_t *cmd) {
 
     cJSON *item = cJSON_GetObjectItem(version_data, JSON_KEY_SOFTWARE_VERSION);
     if (item && cJSON_IsString(item)) {
-        send_firmware_version_data(FIRMWARE_VERSION, "NULL");
+        send_firmware_version_data(FIRMWARE_VERSION, NULL);
     }
 }
 
