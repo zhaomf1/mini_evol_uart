@@ -14,7 +14,7 @@
 float reg_to_float(uint16_t high, uint16_t low) {
     uint32_t float_32bit = ((uint32_t)low << 16) | high;
     float result;
-    memcpy(&result, &float_32bit, sizeof(float)); // 内存拷贝避免精度丢失
+    memcpy(&result, &float_32bit, sizeof(float)); 
     return result;
 }
 

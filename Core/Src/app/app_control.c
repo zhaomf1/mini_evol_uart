@@ -9,6 +9,8 @@
 #include "dev_ph_ctrl.h"
 #include "dev_temp_ctrl.h"
 #include "dev_bldc_ctrl.h"
+#include "dev_od_ctrl.h"
+#include "modbus_rtu.h"
 
 TimerItem_t timers[4]; //定时器列表
 PhCtrl_t ph_ctrl;
@@ -115,6 +117,25 @@ void air_supply_valve_off(void)
 {
     HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_RESET);
 }
+
+//光源快门控制
+void light_source_shutter1_on(void)
+{
+    od_ctrl_set_shutter1_open();
+}
+void light_source_shutter1_off(void)
+{
+    od_ctrl_set_shutter1_off();
+}
+void light_source_shutter2_on(void)
+{
+    od_ctrl_set_shutter2_open();
+}
+void light_source_shutter2_off(void)
+{
+    od_ctrl_set_shutter2_off();
+}
+
 
 //电机初始化，初始化定时器和TMC2209
 void step_motor_init(void)

@@ -5,10 +5,10 @@
 #include "FreeRTOS.h"
 
 typedef enum{
+    MODBUS_ADDR_PH              = 0x01,     // PH模块
     MODBUS_ADDR_TRAIN_BLDC      = 0x02,     // 培养电机
     MODBUS_ADDR_FEEDING_BLDC    = 0x03,     // 补料电机
     MODBUS_ADDR_OD              = 0x20,     // 自研OD模块   
-    MODBUS_ADDR_PH              = 0x01,     // PH模块
     MODBUS_ADDR_TEMP            = 0x80      // 温控模块
 
 }ModbusAddr_t;
@@ -109,21 +109,23 @@ void run_led_on(void);
 void run_led_off(void);
 void run_led2_on(void);
 void run_led2_off(void);
-
 //紫外灯控制
 void uv_lamp_on(void);
 void uv_lamp_off(void);
-
 //照明灯控制
 void light_on(void);
 void light_off(void);
-
 //补料阀控制
 void feed_valve_on(void);
 void feed_valve_off(void);
 //补气阀控制
 void air_supply_valve_on(void);
 void air_supply_valve_off(void);
+//光源快门控制
+void light_source_shutter1_on(void);
+void light_source_shutter1_off(void);
+void light_source_shutter2_on(void);
+void light_source_shutter2_off(void);
 
 //电机控制
 void step_motor_init(void);

@@ -60,3 +60,5 @@ mini_evol\app_control.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V
 mini_evol\app_control.o: ..\Core\Inc\app\dev_ph_ctrl.h
 mini_evol\app_control.o: ..\Core\Inc\app\dev_temp_ctrl.h
 mini_evol\app_control.o: ..\Core\Inc\app\dev_bldc_ctrl.h
+mini_evol\app_control.o: ..\Core\Inc\app\dev_od_ctrl.h
+mini_evol\app_control.o: ..\Core\Inc\common\modbus_rtu.h

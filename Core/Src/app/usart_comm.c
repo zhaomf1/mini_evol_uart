@@ -233,7 +233,7 @@ char* send_ph_data(uint8_t ph_cmd, uint8_t phTime, uint8_t phFactor,
 /**
  * OD板JSON封装（cmd=4，用宏定义键名）
  */
-char* send_od_data(uint16_t odValue, const char *error) {
+char* send_od_data(OdData_t odValue, const char *error) {
     // 1. 创建JSON根对象
     cJSON *root = cJSON_CreateObject();
     if (root == NULL) {
@@ -253,7 +253,10 @@ char* send_od_data(uint16_t odValue, const char *error) {
     cJSON_AddItemToObject(root, JSON_KEY_OD_DATA, od_data);
 
     // 4. 填充od_data字段（宏定义键名JSON_KEY_OD_VALUE）
-    if (!cJSON_AddNumberToObject(od_data, JSON_KEY_OD_VALUE, odValue)) {
+    if (!cJSON_AddNumberToObject(od_data, JSON_KEY_OD_CHANNEL1, odValue.od_channel1) ||
+        !cJSON_AddNumberToObject(od_data, JSON_KEY_OD_CHANNEL2, odValue.od_channel2) ||
+        !cJSON_AddNumberToObject(od_data, JSON_KEY_TEMP_CHANNEL1, odValue.temp_channel1) ||
+        !cJSON_AddNumberToObject(od_data, JSON_KEY_TEMP_CHANNEL2, odValue.temp_channel2)) {
         return json_error_handler(root);
     }
 
@@ -541,58 +544,84 @@ static void parse_valve(cJSON *root, SysCtrlCmd_t *cmd) {
     switch(cmd->data.valve.no)
     {
         case VALVE_FEDDING:     //补料阀
-        if(cmd->data.valve.mode == VALVE_OPEN)
         {
-            feed_valve_on();
-        }
-        else if(cmd->data.valve.mode == VALVE_CLOSE)
-        {
-            feed_valve_off();
+            if(cmd->data.valve.mode == VALVE_OPEN)
+            {
+                feed_valve_on();
+            }
+            else if(cmd->data.valve.mode == VALVE_CLOSE)
+            {
+                feed_valve_off();
+            }
         }
         break;
 
         case VALVE_AIR_SUPPLY:  //补气阀
-        if(cmd->data.valve.mode == VALVE_OPEN)
         {
-            air_supply_valve_on();
-        }
-        else if(cmd->data.valve.mode == VALVE_CLOSE)
-        {
-            air_supply_valve_off();
+            if(cmd->data.valve.mode == VALVE_OPEN)
+            {
+                air_supply_valve_on();
+            }
+            else if(cmd->data.valve.mode == VALVE_CLOSE)
+            {
+                air_supply_valve_off();
+            }
         }
         break;
 
         case VALVE_FLOODLIGHT:  //照明灯
-        if(cmd->data.valve.mode == VALVE_OPEN)
         {
-            light_on();
-        }
-        else if(cmd->data.valve.mode == VALVE_CLOSE)
-        {
-            light_off();
+            if(cmd->data.valve.mode == VALVE_OPEN)
+            {
+                light_on();
+            }
+            else if(cmd->data.valve.mode == VALVE_CLOSE)
+            {
+                light_off();
+            }
         }
         break;
 
         case VALVE_UV_LAMP:     //紫外灯
-        if(cmd->data.valve.mode == VALVE_OPEN)
         {
-            uv_lamp_on();
-        }
-        else if(cmd->data.valve.mode == VALVE_CLOSE)
-        {
-            uv_lamp_off();
+            if(cmd->data.valve.mode == VALVE_OPEN)
+            {
+                uv_lamp_on();
+            }
+            else if(cmd->data.valve.mode == VALVE_CLOSE)
+            {
+                uv_lamp_off();
+            }
         }
         break;
 
-        case VALVE_LIGHT_SOURCE_SHUTTER:    //光源快门
-        if(cmd->data.valve.mode == VALVE_OPEN)
+        case VALVE_LIGHT_SOURCE_SHUTTER1:    //光源快门1
         {
-            // uv_lamp_on();
+            if(cmd->data.valve.mode == VALVE_OPEN)
+            {
+                light_source_shutter1_on();
+            }
+            else if(cmd->data.valve.mode == VALVE_CLOSE)
+            {
+                light_source_shutter1_off();
+            }
         }
-        else if(cmd->data.valve.mode == VALVE_CLOSE)
+        break;
+
+        case VALVE_LIGHT_SOURCE_SHUTTER2:    //光源快门2
         {
-            // uv_lamp_off();
+            if(cmd->data.valve.mode == VALVE_OPEN)
+            {
+                light_source_shutter2_on();
+            }
+            else if(cmd->data.valve.mode == VALVE_CLOSE)
+            {
+                light_source_shutter2_off();
+            }
         }
+        break;
+
+        default:
         break;
         
     }
@@ -673,16 +702,21 @@ static void parse_od_board(cJSON *root, SysCtrlCmd_t *cmd) {
     }
     const char *error = NULL;
 
-    cmd->data.od_board.odValue = (uint16_t)safe_get_json_number(od_data, JSON_KEY_OD_VALUE, 0);
-
-    //获取OD值
-    uint16_t od_value = 0;
-    if(0 != od_ctrl_read_value(&od_value))
+    OdData_t od_buffer;
+    //获取光照，温度值
+    uint16_t od_value[4];
+    if(0 != od_ctrl_read_value(od_value))
     {
-        error = OD_GET_ERROR;
+        // error = OD_GET_ERROR;
     }
+        printf("OD raw values: [0]=%u, [1]=%u, [2]=%u, [3]=%u\r\n",
+           od_value[0], od_value[1], od_value[2], od_value[3]);
+    od_buffer.od_channel1 = od_value[0];
+    od_buffer.od_channel2 = od_value[1];
+    od_buffer.temp_channel1 = (float)od_value[2] / 10.0f;
+    od_buffer.temp_channel2 = (float)od_value[3] / 10.0f;
 
-    send_od_data(od_value,error);
+    send_od_data(od_buffer, error);
 }
 
 /**
@@ -726,7 +760,7 @@ static void parse_temperature(cJSON *root, SysCtrlCmd_t *cmd) {
         uint16_t temp_get = 0;
         if(0 != temp_ctrl_read_temperature(&temp_get))
         {
-            error = TEMP_GET_ERROR;
+            // error = TEMP_GET_ERROR;
         }
         float f_temp = (float)temp_get / 100.0f;
         send_temp_data(cmd->data.temperature_board.temperature_cmd,f_temp,error);

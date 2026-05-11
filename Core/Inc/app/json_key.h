@@ -17,6 +17,10 @@
 #define JSON_KEY_PH_SET_B               "setB"                  //PH标定B值
 #define JSON_KEY_OD_DATA                "od_data"        
 #define JSON_KEY_OD_VALUE               "odValue"               //OD值
+#define JSON_KEY_OD_CHANNEL1            "od_channel1"           //OD通道1
+#define JSON_KEY_OD_CHANNEL2            "od_channel2"           //OD通道2
+#define JSON_KEY_TEMP_CHANNEL1          "temp_channel1"         //OD温度1
+#define JSON_KEY_TEMP_CHANNEL2          "temp_channel2"         //OD温度2
 #define JSON_KEY_TEMP_DATA              "temperature_data"      //温度数据
 #define JSON_KEY_TEMP_CMD               "temperature_cmd"       //温度指令：0-设置，1-关闭，2-获取
 #define JSON_KEY_TEMP_VALUE             "temperatureValue"      //温度值

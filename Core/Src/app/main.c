@@ -28,10 +28,8 @@
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
-#include "tmc2209.h"
 #include "app_control.h"
 #include "cjson_pool.h"
-#include "dev_bldc_ctrl.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */

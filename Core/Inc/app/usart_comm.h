@@ -32,7 +32,8 @@ typedef enum{
     VALVE_AIR_SUPPLY,               //补气阀
     VALVE_FLOODLIGHT,               //照明灯
     VALVE_UV_LAMP,                  //紫外灯
-    VALVE_LIGHT_SOURCE_SHUTTER      //光源快门
+    VALVE_LIGHT_SOURCE_SHUTTER1,    //光源快门
+    VALVE_LIGHT_SOURCE_SHUTTER2,    //光源快门
 }ValveType_t;
 
 // 电机动作
@@ -66,7 +67,7 @@ typedef struct {
 } ValveData_t;
 
 typedef enum{
-    VALVE_OPEN = 0XFF,              // 开
+    VALVE_OPEN = 0xFF,              // 开
     VALVE_CLOSE = 0,          // 关
 }ValveState_t;
 
@@ -82,7 +83,10 @@ typedef struct {
 
 // OD板数据结构
 typedef struct {
-    uint16_t odValue;    // OD值（0~65535）
+    uint16_t od_channel1;    // OD通道1值（0~65535）
+    uint16_t od_channel2;    // OD通道2值（0~65535）
+    float temp_channel1;  // 温度通道1值
+    float temp_channel2;  // 温度通道2值
 } OdData_t;
 
 // 温控数据结构
