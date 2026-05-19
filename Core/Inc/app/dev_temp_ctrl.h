@@ -14,9 +14,12 @@ typedef enum
 int temp_ctrl_switch_ctrl_temperature(uint16_t state);
 int temp_ctrl_set_temperature(uint16_t temperature);
 int temp_ctrl_read_temperature(uint16_t *temperature);
-int temp_ctrl_read_alarm(void);
+int temp_ctrl_read_alarm(uint16_t *alarm_info);
 int temp_ctrl_set_timeout(uint16_t second);
 int dev_temp_init(void);
+void set_temp_error_info(uint16_t error_code);
+void get_temp_error_info(uint8_t *error_info);
+int temp_ctrl_check_and_update_alarm(void);
 
 
 #endif

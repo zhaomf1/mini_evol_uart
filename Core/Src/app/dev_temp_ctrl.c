@@ -3,6 +3,8 @@
 #include "modbus_rtu.h"
 #include "app_control.h"
 
+uint8_t temp_error_info[50]; // 温度报警信息
+
 
 /**
  * @brief 控制温控开关
@@ -45,32 +47,16 @@ int temp_ctrl_read_temperature(uint16_t *temperature)
 
 /**
  * @brief 读取报警信息
- * @param 
+ * @param alarm_info 输出报警信息
  * @return MODBUS_OK 成功，其他错误码
  */
-int temp_ctrl_read_alarm(void)
+int temp_ctrl_read_alarm(uint16_t *alarm_info)
 {
     uint16_t reg = 0;
     int ret = modbus_read_input_registers(MODBUS_ADDR_TEMP, 0x0003, 1, &reg);
-
-    int bit0 = (reg & 0x01);      
-    int bit1 = (reg & 0x02) >> 1; 
-    int bit2 = (reg & 0x04) >> 2; 
-    int bit3 = (reg & 0x08) >> 3;
-
-#if 1
-    printf("alarm info: reg = %02X\n",reg);
-
-    if(bit0 == 1){
-        printf("温度报警");
-    } else if(bit1 == 1){
-        printf("长时间不就绪");
-    } else if(bit2 == 1){
-        printf("探头短路");
-    } else if(bit3 == 1){
-        printf("探头没接");
+    if (ret == MODBUS_OK) {
+        *alarm_info = reg;
     }
-#endif
 
     return ret;
 }
@@ -92,11 +78,76 @@ int temp_ctrl_set_timeout(uint16_t second)
  * @brief 初始化温控设备,上电初始化一次
  * @return  0 成功 -1 失败
  */
+/**
+ * @brief 初始化设备温度控制模块
+ * 
+ * @return int 成功返回0，失败返回-1
+ */
 int dev_temp_init(void)
 {
+    // 设置温度控制超时时间为3600秒
     if(temp_ctrl_set_timeout(3600) != 0)
     {
+        // 设置超时失败，返回错误码
         return -1;
     }
+    // 初始化成功
     return 0;
+}
+
+
+void set_temp_error_info(uint16_t error_code)
+{
+    int bit0 = (error_code & 0x01);
+    int bit1 = (error_code & 0x02) >> 1;
+    int bit2 = (error_code & 0x04) >> 2;
+    int bit3 = (error_code & 0x08) >> 3;
+
+    memset(temp_error_info, 0, sizeof(temp_error_info));
+
+    if (bit0 == 0 && bit1 == 0 && bit2 == 0 && bit3 == 0) {
+        strcpy((char*)temp_error_info, "OK");
+        return;
+    }
+
+    if (bit0 == 1) {
+        strcat((char*)temp_error_info, "temp alarm");
+    }
+    if (bit1 == 1) {
+        if (strlen((char*)temp_error_info) > 0) {
+            strcat((char*)temp_error_info, ",");
+        }
+        strcat((char*)temp_error_info, "temp not ready for a long time");
+    }
+    if (bit2 == 1) {
+        if (strlen((char*)temp_error_info) > 0) {
+            strcat((char*)temp_error_info, ",");
+        }
+        strcat((char*)temp_error_info, "temp probe short circuit");
+    }
+    if (bit3 == 1) {
+        if (strlen((char*)temp_error_info) > 0) {
+            strcat((char*)temp_error_info, ",");
+        }
+        strcat((char*)temp_error_info, "temp probe open circuit");
+    }
+}
+
+void get_temp_error_info(uint8_t *error_info)
+{
+    strcpy((char*)error_info, (char*)temp_error_info);
+}
+
+/**
+ * @brief 读取温控报警并更新错误信息
+ * @return MODBUS_OK 成功，其他错误码
+ */
+int temp_ctrl_check_and_update_alarm(void)
+{
+    uint16_t alarm_info = 0;
+    int ret = temp_ctrl_read_alarm(&alarm_info);
+    if (ret == MODBUS_OK) {
+        set_temp_error_info(alarm_info);
+    }
+    return ret;
 }

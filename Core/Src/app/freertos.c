@@ -25,6 +25,7 @@
 #include "modbus_rtu.h"
 #include "app_control.h"
 #include "usart_comm.h"
+#include "dev_temp_ctrl.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -57,6 +58,8 @@ osThreadId_t uartCommTaskHandle;        //与上位机通讯任务句柄
 osThreadId_t timerTaskHandle;           //定时器任务
 osThreadId_t phCtrlTaskHandle;          //PH流程控制任务
 osThreadId_t appInitTaskHandle;         //应用初始化任务
+osThreadId_t tempAlarmTaskHandle;       //温控报警定时查询任务
+
 
 //消息队列句柄
 osMessageQueueId_t uartRxQueueHandle;   //串口接收消息队列
@@ -93,13 +96,19 @@ const osThreadAttr_t appInitTask_attributes = {
     .priority = (osPriority_t)osPriorityNormal,
 };
 
+const osThreadAttr_t tempAlarmTask_attributes = {
+    .name = "tempAlarmTask",
+    .stack_size = 256 * 4,
+    .priority = (osPriority_t)osPriorityNormal,
+};
+
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
 
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
-
+void temp_alarm_task(void *argument);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /**
@@ -139,6 +148,7 @@ void MX_FREERTOS_Init(void)
     timerTaskHandle = osThreadNew(TimerTask, NULL, &timerTask_attributes);                  //定时器任务
     phCtrlTaskHandle = osThreadNew(phControlTask, NULL, &phCtrlTask_attributes);            //ph流程任务
     appInitTaskHandle = osThreadNew(appInitTask, NULL, &appInitTask_attributes);            //应用初始化任务
+    tempAlarmTaskHandle = osThreadNew(temp_alarm_task, NULL, &tempAlarmTask_attributes);    //温控报警定时查询任务
     /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
     /* USER CODE END RTOS_THREADS */
@@ -159,8 +169,9 @@ void StartDefaultTask(void *argument)
 {
     /* USER CODE BEGIN StartDefaultTask */
     uint8_t first_enter = 1;
-    uint16_t step_cnt = 0;
     uint16_t color_cnt = 0;
+    uint16_t temp_alarm_cnt = 0;
+    uint16_t temp_alarm_info = 0;
 
 
     /* Infinite loop */
@@ -169,6 +180,7 @@ void StartDefaultTask(void *argument)
         // 喂狗
         extern IWDG_HandleTypeDef hiwdg;
         HAL_IWDG_Refresh(&hiwdg);
+
 
         // OD测试程序
         {
@@ -282,5 +294,19 @@ void StartDefaultTask(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+
+/**
+ * @brief 温控报警定时查询任务，每分钟读取一次温控报警状态
+ */
+void temp_alarm_task(void *argument)
+{
+    (void)argument;
+
+    for (;;)
+    {
+        temp_ctrl_check_and_update_alarm();
+        osDelay(60000);
+    }
+}
 
 /* USER CODE END Application */

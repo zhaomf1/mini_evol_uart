@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include "gpio.h"
 #include "app_control.h"
 #include "tmc2209.h"
@@ -11,6 +12,7 @@
 #include "dev_bldc_ctrl.h"
 #include "dev_od_ctrl.h"
 #include "modbus_rtu.h"
+#include "i2c.h"
 
 TimerItem_t timers[4]; //定时器列表
 PhCtrl_t ph_ctrl;
@@ -447,10 +449,148 @@ void phControlTask(void *pvParameters)
     }
 }
 
+#define AT24C02_ADDR        0xA0
+#define AT24C02_PAGE_SIZE   8
+#define AT24C02_MAX_ADDR    255
+
+/**
+ * @brief AT24C02 写一个字节
+ * @param addr 内存地址 (0-255)
+ * @param data 要写入的数据
+ * @return HAL_OK 成功，其他失败
+ */
+HAL_StatusTypeDef at24c02_write_byte(uint8_t addr, uint8_t data)
+{
+    return HAL_I2C_Mem_Write(&hi2c1, AT24C02_ADDR, addr, I2C_MEMADD_SIZE_8BIT, &data, 1, 100);
+}
+
+/**
+ * @brief AT24C02 读一个字节
+ * @param addr 内存地址 (0-255)
+ * @param data 读取到的数据
+ * @return HAL_OK 成功，其他失败
+ */
+HAL_StatusTypeDef at24c02_read_byte(uint8_t addr, uint8_t *data)
+{
+    return HAL_I2C_Mem_Read(&hi2c1, AT24C02_ADDR, addr, I2C_MEMADD_SIZE_8BIT, data, 1, 100);
+}
+
+/**
+ * @brief AT24C02 写一页数据（最多8字节）
+ * @param addr 起始地址 (0-255)
+ * @param data 要写入的数据指针
+ * @param len 数据长度 (1-8)
+ * @return HAL_OK 成功，其他失败
+ */
+HAL_StatusTypeDef at24c02_write_page(uint8_t addr, uint8_t *data, uint8_t len)
+{
+    if (len > AT24C02_PAGE_SIZE) len = AT24C02_PAGE_SIZE;
+    return HAL_I2C_Mem_Write(&hi2c1, AT24C02_ADDR, addr, I2C_MEMADD_SIZE_8BIT, data, len, 100);
+}
+
+/**
+ * @brief AT24C02 连续读取多个字节
+ * @param addr 起始地址 (0-255)
+ * @param data 读取数据缓冲区
+ * @param len 读取长度
+ * @return HAL_OK 成功，其他失败
+ */
+HAL_StatusTypeDef at24c02_read_buffer(uint8_t addr, uint8_t *data, uint16_t len)
+{
+    return HAL_I2C_Mem_Read(&hi2c1, AT24C02_ADDR, addr, I2C_MEMADD_SIZE_8BIT, data, len, 100);
+}
+
+#define EEPROM_PH_K_ADDR    0x00    //PH,K值存储地址
+#define EEPROM_PH_B_ADDR    0x04    //PH,B值存储地址
+
+
+
+/**
+ * @brief 保存 PH 标定 K 值到 EEPROM
+ * @param k K 值
+ * @return HAL_OK 成功，其他失败
+ */
+HAL_StatusTypeDef at24c02_save_ph_k(float k)
+{
+    uint8_t data[4];
+    memcpy(data, &k, sizeof(float));
+    HAL_StatusTypeDef ret = at24c02_write_page(EEPROM_PH_K_ADDR, data, 4);
+    HAL_Delay(5);
+    return ret;
+}
+
+/**
+ * @brief 保存 PH 标定 B 值到 EEPROM
+ * @param b B 值
+ * @return HAL_OK 成功，其他失败
+ */
+HAL_StatusTypeDef at24c02_save_ph_b(float b)
+{
+    uint8_t data[4];
+    memcpy(data, &b, sizeof(float));
+    HAL_StatusTypeDef ret = at24c02_write_page(EEPROM_PH_B_ADDR, data, 4);
+    HAL_Delay(5);
+    return ret;
+}
+
+/**
+ * @brief 从 EEPROM 读取 PH 标定 K 值
+ * @param k 读取的 K 值
+ * @return HAL_OK 成功，其他失败
+ */
+HAL_StatusTypeDef at24c02_load_ph_k(float *k)
+{
+    uint8_t data[4];
+    HAL_StatusTypeDef ret = at24c02_read_buffer(EEPROM_PH_K_ADDR, data, 4);
+    if (ret == HAL_OK) {
+        memcpy(k, data, sizeof(float));
+    }
+    return ret;
+}
+
+/**
+ * @brief 从 EEPROM 读取 PH 标定 B 值
+ * @param b 读取的 B 值
+ * @return HAL_OK 成功，其他失败
+ */
+HAL_StatusTypeDef at24c02_load_ph_b(float *b)
+{
+    uint8_t data[4];
+    HAL_StatusTypeDef ret = at24c02_read_buffer(EEPROM_PH_B_ADDR, data, 4);
+    if (ret == HAL_OK) {
+        memcpy(b, data, sizeof(float));
+    }
+    return ret;
+}
+
+/**
+ * @brief 从 EEPROM 加载 PH 标定参数并初始化
+ * @return HAL_OK 成功，其他失败
+ */
+HAL_StatusTypeDef at24c02_load_ph_kb(void)
+{
+    float k, b;
+    HAL_StatusTypeDef ret_k = at24c02_load_ph_k(&k);
+    HAL_StatusTypeDef ret_b = at24c02_load_ph_b(&b);
+
+    if (ret_k == HAL_OK && ret_b == HAL_OK) {
+        set_ph_kb_value(k, b);
+        printf("Loaded PH KB from EEPROM: K=%f, B=%f\n", k, b);
+        return HAL_OK;
+    }
+
+    printf("EEPROM load failed, using default KB values\n");
+    set_ph_kb_value(1.0f, 0.0f);
+    return HAL_ERROR;
+}
+
 //APP初始化任务，电机
 void appInitTask(void *pvParameters)
 {
     osDelay(200); //等待系统初始化完成
+
+    printf("Loading PH KB from EEPROM...\r\n");
+    at24c02_load_ph_kb();
 
     InitState_t state = INIT_BLDC_PENDING;
     int ret = 0;

@@ -687,6 +687,10 @@ static void parse_ph_board(cJSON *root, SysCtrlCmd_t *cmd) {
         printf("setK:%f,setB:%f\n",cmd->data.ph_board.setK,cmd->data.ph_board.setB);
         set_ph_kb_value(cmd->data.ph_board.setK,cmd->data.ph_board.setB);
 
+        at24c02_save_ph_k(cmd->data.ph_board.setK);
+        at24c02_save_ph_b(cmd->data.ph_board.setB);
+        printf("Saved PH KB to EEPROM\n");
+
         send_ph_data( cmd->data.ph_board.ph_cmd, cmd->data.ph_board.phTime,cmd->data.ph_board.phFactor,cmd->data.ph_board.phValue,cmd->data.ph_board.setK,cmd->data.ph_board.setB,NULL);
     }
 
@@ -709,8 +713,6 @@ static void parse_od_board(cJSON *root, SysCtrlCmd_t *cmd) {
     {
         // error = OD_GET_ERROR;
     }
-        printf("OD raw values: [0]=%u, [1]=%u, [2]=%u, [3]=%u\r\n",
-           od_value[0], od_value[1], od_value[2], od_value[3]);
     od_buffer.od_channel1 = od_value[0];
     od_buffer.od_channel2 = od_value[1];
     od_buffer.temp_channel1 = (float)od_value[2] / 10.0f;
@@ -728,6 +730,7 @@ static void parse_temperature(cJSON *root, SysCtrlCmd_t *cmd) {
         return;
     }
     const char *error = NULL;
+    uint8_t temp_error_str[50] = {0};
 
     cmd->data.temperature_board.temperature_cmd = (uint8_t)safe_get_json_number(temp_data, JSON_KEY_TEMP_CMD, 0);
     cmd->data.temperature_board.temperatureValue = (float)safe_get_json_number(temp_data, JSON_KEY_TEMP_VALUE, 0.0f);
@@ -740,10 +743,14 @@ static void parse_temperature(cJSON *root, SysCtrlCmd_t *cmd) {
         {
             error = TEMP_SET_ERROR;
         }
-        
+
         if(0 != temp_ctrl_switch_ctrl_temperature(1))
         {
             error = TEMP_SET_ERROR;
+        }
+        get_temp_error_info(temp_error_str);
+        if (temp_error_str[0] != '\0' && strcmp((char*)temp_error_str, "OK") != 0) {
+            error = (const char*)temp_error_str;
         }
         send_temp_data(cmd->data.temperature_board.temperature_cmd,cmd->data.temperature_board.temperatureValue,error);
     }   //关闭温控模块
@@ -752,6 +759,10 @@ static void parse_temperature(cJSON *root, SysCtrlCmd_t *cmd) {
         if(0 != temp_ctrl_switch_ctrl_temperature(0))
         {
             error = TEMP_SET_ERROR;
+        }
+        get_temp_error_info(temp_error_str);
+        if (temp_error_str[0] != '\0' && strcmp((char*)temp_error_str, "OK") != 0) {
+            error = (const char*)temp_error_str;
         }
         send_temp_data(cmd->data.temperature_board.temperature_cmd,0,error);
     }   //获取当前温度值
@@ -763,6 +774,10 @@ static void parse_temperature(cJSON *root, SysCtrlCmd_t *cmd) {
             // error = TEMP_GET_ERROR;
         }
         float f_temp = (float)temp_get / 100.0f;
+        get_temp_error_info(temp_error_str);
+        if (temp_error_str[0] != '\0' && strcmp((char*)temp_error_str, "OK") != 0) {
+            error = (const char*)temp_error_str;
+        }
         send_temp_data(cmd->data.temperature_board.temperature_cmd,f_temp,error);
     }
 
