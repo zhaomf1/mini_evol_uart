@@ -102,6 +102,7 @@ const osThreadAttr_t tempAlarmTask_attributes = {
     .priority = (osPriority_t)osPriorityNormal,
 };
 
+
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
 
