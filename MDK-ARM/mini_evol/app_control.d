@@ -1,6 +1,7 @@
 mini_evol\app_control.o: ..\Core\Src\app\app_control.c
 mini_evol\app_control.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 mini_evol\app_control.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+mini_evol\app_control.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
 mini_evol\app_control.o: ..\Core\Inc\peripheral\gpio.h
 mini_evol\app_control.o: ..\Core\Inc\app\main.h
 mini_evol\app_control.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
@@ -62,3 +63,4 @@ mini_evol\app_control.o: ..\Core\Inc\app\dev_temp_ctrl.h
 mini_evol\app_control.o: ..\Core\Inc\app\dev_bldc_ctrl.h
 mini_evol\app_control.o: ..\Core\Inc\app\dev_od_ctrl.h
 mini_evol\app_control.o: ..\Core\Inc\common\modbus_rtu.h
+mini_evol\app_control.o: ..\Core\Inc\peripheral\i2c.h

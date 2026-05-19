@@ -53,3 +53,4 @@ mini_evol\freertos.o: ..\Core\Inc\app\app_control.h
 mini_evol\freertos.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 mini_evol\freertos.o: ..\Core\Inc\app\usart_comm.h
 mini_evol\freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h
+mini_evol\freertos.o: ..\Core\Inc\app\dev_temp_ctrl.h
