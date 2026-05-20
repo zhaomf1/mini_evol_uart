@@ -131,10 +131,13 @@ void light_source_shutter2_off(void);
 void step_motor_init(void);
 void step_motor_control(StepMotorId_t id, StepMotorCmd_t cmd, uint16_t value);
 void set_step_motor_step_number(StepMotorId_t id, uint32_t steps);
+uint8_t step_motor_check(StepMotorId_t id);
 void TimerTask(void *pvParameters); // 定时器任务
 void appInitTask(void *pvParameters); //初始化任务
 void StartTimer(uint8_t func_id, uint32_t timeout_ms);
 void StopTimer(uint8_t func_id);
+
+
 void set_ph_kb_value(float ph_k, float ph_b);
 void get_ph_kb_value(float *ph_k, float *ph_b);
 

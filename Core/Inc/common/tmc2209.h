@@ -48,7 +48,7 @@
 #define INDEX3_Pin 			GPIO_PIN_13
 #define INDEX3_GPIO_Port 	GPIOE
 #define INDEX3_EXTI_IRQn 	EXTI2_IRQn
-#define DIAG3_Pin 			GPIO_PIN_13
+#define DIAG3_Pin 			GPIO_PIN_14
 #define DIAG3_GPIO_Port 	GPIOE
 #define DIAG3_EXTI_IRQn 	EXTI3_IRQn
 #define STEP3_Pin 			GPIO_PIN_6

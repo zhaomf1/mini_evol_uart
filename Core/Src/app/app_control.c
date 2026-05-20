@@ -180,6 +180,30 @@ TIM_HandleTypeDef *get_motor_tim(StepMotorId_t id)
 	return NULL;
 }
 
+//步进电机驱动芯片异常检测,1为出错，0为正常
+uint8_t step_motor_check(StepMotorId_t id)
+{
+    uint8_t ret = 0;
+    switch(id)
+    {
+        case STEP_MOTOR_PH:
+            ret = HAL_GPIO_ReadPin(DIAG1_GPIO_Port, DIAG1_Pin);
+            break;
+        case STEP_MOTOR_FEED:
+            ret = HAL_GPIO_ReadPin(DIAG2_GPIO_Port, DIAG2_Pin);
+            break;
+        case STEP_MOTOR_DRAIN:
+            ret = HAL_GPIO_ReadPin(DIAG3_GPIO_Port, DIAG3_Pin);
+            break;
+        case STEP_MOTOR_RESERVED:
+            ret = HAL_GPIO_ReadPin(DIAG4_GPIO_Port, DIAG4_Pin);
+            break;
+        default:
+            break;
+    }
+    return ret;
+}
+
 /**
  * @brief  步进电机控制函数
  * @note   用于控制指定ID的步进电机的开关、转速和方向

@@ -91,7 +91,7 @@ char* send_bldc_data(uint8_t no, uint16_t speed, uint8_t mode, const char *error
 /**
  * 步进电机JSON封装（cmd=1，用宏定义键名）
  */
-char* send_steo_motor_data(uint8_t no, uint16_t speed, uint32_t step, uint8_t mode, const char *error)
+char* send_step_motor_data(uint8_t no, uint16_t speed, uint32_t step, uint8_t mode, const char *error)
 {
     // 1. 创建JSON根对象
     cJSON *root = cJSON_CreateObject();
@@ -490,6 +490,40 @@ static void parse_step_motor(cJSON *root, SysCtrlCmd_t *cmd) {
     cmd->data.stepp_motor.mode = (uint8_t)safe_get_json_number(motor_data, JSON_KEY_DATA_MODE, 0);
     // printf("speed:%ld,step:%ld,mode:%ld\r\n",cmd->data.stepp_motor.speed,cmd->data.stepp_motor.step,cmd->data.stepp_motor.mode);
 
+    //判断电机是否异常
+    // if(step_motor_check((StepMotorId_t)cmd->data.stepp_motor.no) == 1)
+    // {
+        switch((StepMotorId_t)cmd->data.stepp_motor.no)
+        {
+            case STEP_MOTOR_PH:
+                TIM1_Init(39);
+                TMC2209_init(0,10,4); 
+                break;
+
+            case STEP_MOTOR_FEED:
+                TIM2_Init(39);
+                TMC2209_init(1,10,4); 
+                break;
+
+            case STEP_MOTOR_DRAIN:
+                TIM3_Init(39);
+                TMC2209_init(2,10,4); 
+                break;
+
+            case STEP_MOTOR_RESERVED:
+                TIM4_Init(255);
+                TMC2209_init(3,10,4); 
+                break;
+
+            default:
+                break;
+
+        }
+
+        osDelay(20);
+    // }
+
+
     //控制电机
     if(cmd->data.stepp_motor.mode == MOTOR_MODE_CW)         //正转步数
     {
@@ -518,14 +552,13 @@ static void parse_step_motor(cJSON *root, SysCtrlCmd_t *cmd) {
     else if(cmd->data.stepp_motor.mode == MOTOR_MODE_STOP)    //停止
     {
         step_motor_control((StepMotorId_t)cmd->data.stepp_motor.no,STEP_MOTOR_CMD_SWITCH,STEP_MOTOR_DISABLE);
+        send_step_motor_data(cmd->data.stepp_motor.no,cmd->data.stepp_motor.speed,cmd->data.stepp_motor.step,cmd->data.stepp_motor.mode,NULL);
+        return;
     }
 
-    //设置电机转速
     step_motor_control((StepMotorId_t)cmd->data.stepp_motor.no,STEP_MOTOR_CMD_SPEED,cmd->data.stepp_motor.speed);
 
-    // printf("speed:%ld,step:%ld,mode:%ld\r\n",cmd->data.stepp_motor.speed,cmd->data.stepp_motor.step,cmd->data.stepp_motor.mode);
-    //上报上位机
-    send_steo_motor_data(cmd->data.stepp_motor.no,cmd->data.stepp_motor.speed,cmd->data.stepp_motor.step,cmd->data.stepp_motor.mode,NULL);
+    send_step_motor_data(cmd->data.stepp_motor.no,cmd->data.stepp_motor.speed,cmd->data.stepp_motor.step,cmd->data.stepp_motor.mode,NULL);
 
 }
 
@@ -751,7 +784,7 @@ static void parse_temperature(cJSON *root, SysCtrlCmd_t *cmd) {
         get_temp_error_info(temp_error_str);
         if (temp_error_str[0] != '\0' && strcmp((char*)temp_error_str, "OK") != 0) {
             error = (const char*)temp_error_str;
-        }
+    }
         send_temp_data(cmd->data.temperature_board.temperature_cmd,cmd->data.temperature_board.temperatureValue,error);
     }   //关闭温控模块
     else if(cmd->data.temperature_board.temperature_cmd == TEMP_CTRL_CLOSE)
@@ -763,7 +796,7 @@ static void parse_temperature(cJSON *root, SysCtrlCmd_t *cmd) {
         get_temp_error_info(temp_error_str);
         if (temp_error_str[0] != '\0' && strcmp((char*)temp_error_str, "OK") != 0) {
             error = (const char*)temp_error_str;
-        }
+    }
         send_temp_data(cmd->data.temperature_board.temperature_cmd,0,error);
     }   //获取当前温度值
     else if(cmd->data.temperature_board.temperature_cmd == TEMP_CTRL_GET)
