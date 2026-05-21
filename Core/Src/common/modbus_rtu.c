@@ -5,8 +5,8 @@
 
 /* 默认配置 */
 static ModbusConfig_t modbus_config = {
-    .timeout_ms = 200,      //
-    .retry_count = 3,       //重传次数
+    .timeout_ms = 1000,      //修改等待时间
+    .retry_count = 2,       //重传次数
 };
 
 /* 状态统计 */
@@ -87,7 +87,7 @@ static int modbus_transaction(uint8_t slave, uint8_t func, uint8_t *req, uint16_
     uint16_t crc;
 
     // 获取互斥锁
-    if (!modbus_mutex || osMutexAcquire(modbus_mutex, osWaitForever) != osOK) {
+    if (!modbus_mutex || osMutexAcquire(modbus_mutex, 5000) != osOK) {
         modbus_status.error_count++;
         return MODBUS_ERR_MUTEX;
     }

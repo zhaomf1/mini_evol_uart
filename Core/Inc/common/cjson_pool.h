@@ -22,6 +22,11 @@ size_t cjson_pool_used(void);
 /**
  * @brief  重置内存池
  */
-void cjson_pool_reset(void);
+void cjson_pool_reset();
+
+/**
+ * @brief  创建互斥锁（必须在 FreeRTOS 内核初始化后调用）
+ */
+void cjson_pool_create_mutex();
 
 #endif

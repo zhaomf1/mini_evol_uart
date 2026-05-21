@@ -1,6 +1,7 @@
 #include "cjson_pool.h"
 #include "cJSON.h"
 #include "stm32f4xx_hal.h"
+#include "cmsis_os2.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <assert.h>
@@ -13,11 +14,20 @@
 // 向上取整对齐计算
 #define CJSON_ALIGN_SIZE(size) ((size + CJSON_POOL_ALIGN_MASK) & ~CJSON_POOL_ALIGN_MASK)
 
-// ************************ 裸机临界区保护************************
-// 关全局中断
-#define CJSON_ENTER_CRITICAL() __disable_irq()
-// 开全局中断
-#define CJSON_EXIT_CRITICAL() __enable_irq()
+// ************************ FreeRTOS 互斥锁保护************************
+static osMutexId_t cjson_pool_mutex = NULL;
+
+#define CJSON_ENTER_CRITICAL() do { \
+    if (cjson_pool_mutex != NULL) { \
+        osMutexAcquire(cjson_pool_mutex, osWaitForever); \
+    } \
+} while(0)
+
+#define CJSON_EXIT_CRITICAL() do { \
+    if (cjson_pool_mutex != NULL) { \
+        osMutexRelease(cjson_pool_mutex); \
+    } \
+} while(0)
 
 // ************************ DEBUG日志 ************************
 #if CJSON_POOL_DEBUG
@@ -144,6 +154,18 @@ void cjson_pool_init(void)
         CJSON_POOL_LOG("Init success, size: %zu bytes", CJSON_POOL_SIZE);
     }
     cjson_pool_reset(); // 初始重置指针
+}
+
+void cjson_pool_create_mutex(void)
+{
+    if (cjson_pool_mutex == NULL) {
+        cjson_pool_mutex = osMutexNew(NULL);
+        if (cjson_pool_mutex != NULL) {
+            CJSON_POOL_LOG("Mutex created successfully");
+        } else {
+            CJSON_POOL_LOG("Failed to create mutex");
+        }
+    }
 }
 
 size_t cjson_pool_used(void)

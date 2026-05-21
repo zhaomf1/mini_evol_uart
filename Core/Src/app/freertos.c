@@ -66,16 +66,14 @@ osMessageQueueId_t uartRxQueueHandle;   //串口接收消息队列
 
 const osThreadAttr_t defaultTask_attributes = {
     .name = "defaultTask",
-    // .stack_size = 128 * 4,
     .stack_size = 256 * 4,      //printf占用栈空间，先设置大点便于调试
     .priority = (osPriority_t)osPriorityNormal,
 };
 
 const osThreadAttr_t uartCommTask_attributes = {
     .name = "uartCommTask",
-    // .stack_size = 128 * 4,
     .stack_size = 256 * 4,      //printf占用栈空间，先设置大点便于调试
-    .priority = (osPriority_t)osPriorityAboveNormal,
+    .priority = (osPriority_t)osPriorityRealtime,   //与上位机有时通信失败，提高优先级
 };
 
 const osThreadAttr_t timerTask_attributes = {

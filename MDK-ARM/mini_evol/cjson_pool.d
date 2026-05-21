@@ -38,6 +38,7 @@ mini_evol\cjson_pool.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h
 mini_evol\cjson_pool.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 mini_evol\cjson_pool.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 mini_evol\cjson_pool.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
+mini_evol\cjson_pool.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h
 mini_evol\cjson_pool.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\assert.h
 mini_evol\cjson_pool.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 mini_evol\cjson_pool.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h

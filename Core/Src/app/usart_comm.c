@@ -14,6 +14,10 @@
 #include "dev_temp_ctrl.h"
 #include "error_code.h"
 
+// JSON 发送缓冲区（静态分配，避免返回内存池指针）
+#define JSON_TX_BUFFER_SIZE 256
+static char json_tx_buffer[JSON_TX_BUFFER_SIZE];
+
 
 // ====================== 工具函数 ======================
 /**
@@ -78,14 +82,19 @@ char* send_bldc_data(uint8_t no, uint16_t speed, uint8_t mode, const char *error
     }
 
     // 6. 生成带格式的JSON字符串（便于调试）
-    char *json_str = cJSON_Print(root);
+    char *json_str = cJSON_PrintUnformatted(root);
     uint16_t json_len = strlen(json_str);
+    
+    // 复制到静态缓冲区，避免返回内存池指针
+    if (json_len < JSON_TX_BUFFER_SIZE) {
+        memcpy(json_tx_buffer, json_str, json_len + 1);
+    }
  
-    host_transmit((uint8_t *)json_str, json_len);
+    host_transmit((uint8_t *)json_tx_buffer, json_len);
 
     cJSON_Delete(root);
     cjson_pool_reset();
-    return json_str;
+    return json_tx_buffer;
 }
 
 /**
@@ -126,13 +135,17 @@ char* send_step_motor_data(uint8_t no, uint16_t speed, uint32_t step, uint8_t mo
     }
 
     // 6. 生成带格式的JSON字符串（便于调试）
-    char *json_str = cJSON_Print(root);
+    char *json_str = cJSON_PrintUnformatted(root);
     uint16_t json_len = strlen(json_str);
-    host_transmit((uint8_t *)json_str, json_len);
+    
+    if (json_len < JSON_TX_BUFFER_SIZE) {
+        memcpy(json_tx_buffer, json_str, json_len + 1);
+    }
+    host_transmit((uint8_t *)json_tx_buffer, json_len);
 
     cJSON_Delete(root);
     cjson_pool_reset();
-    return json_str;
+    return json_tx_buffer;
 }
 
 /**
@@ -171,13 +184,17 @@ char* send_valve_data(uint8_t no, uint8_t mode, const char *error)
     }
 
     // 6. 生成带格式的JSON字符串（便于调试）
-    char *json_str = cJSON_Print(root);
+    char *json_str = cJSON_PrintUnformatted(root);
     uint16_t json_len = strlen(json_str);
-    host_transmit((uint8_t *)json_str, json_len);
+    
+    if (json_len < JSON_TX_BUFFER_SIZE) {
+        memcpy(json_tx_buffer, json_str, json_len + 1);
+    }
+    host_transmit((uint8_t *)json_tx_buffer, json_len);
 
     cJSON_Delete(root);
     cjson_pool_reset();
-    return json_str;
+    return json_tx_buffer;
 }
 
 /**
@@ -221,13 +238,17 @@ char* send_ph_data(uint8_t ph_cmd, uint8_t phTime, uint8_t phFactor,
     }
 
     // 6. 生成带格式的JSON字符串（便于调试）
-    char *json_str = cJSON_Print(root);
+    char *json_str = cJSON_PrintUnformatted(root);
     uint16_t json_len = strlen(json_str);
-    host_transmit((uint8_t *)json_str, json_len);
+    
+    if (json_len < JSON_TX_BUFFER_SIZE) {
+        memcpy(json_tx_buffer, json_str, json_len + 1);
+    }
+    host_transmit((uint8_t *)json_tx_buffer, json_len);
 
     cJSON_Delete(root);
     cjson_pool_reset();
-    return json_str;
+    return json_tx_buffer;
 }
 
 /**
@@ -267,13 +288,17 @@ char* send_od_data(OdData_t odValue, const char *error) {
     }
 
     // 6. 生成带格式的JSON字符串（便于调试）
-    char *json_str = cJSON_Print(root);
+    char *json_str = cJSON_PrintUnformatted(root);
     uint16_t json_len = strlen(json_str);
-    host_transmit((uint8_t *)json_str, json_len);
+    
+    if (json_len < JSON_TX_BUFFER_SIZE) {
+        memcpy(json_tx_buffer, json_str, json_len + 1);
+    }
+    host_transmit((uint8_t *)json_tx_buffer, json_len);
 
     cJSON_Delete(root);
     cjson_pool_reset();
-    return json_str;
+    return json_tx_buffer;
 }
 
 /**
@@ -311,13 +336,17 @@ char* send_temp_data(uint8_t temp_cmd, float tempValue, const char *error) {
     }
 
     // 6. 生成带格式的JSON字符串（便于调试）
-    char *json_str = cJSON_Print(root);
+    char *json_str = cJSON_PrintUnformatted(root);
     uint16_t json_len = strlen(json_str);
-    host_transmit((uint8_t *)json_str, json_len);
+    
+    if (json_len < JSON_TX_BUFFER_SIZE) {
+        memcpy(json_tx_buffer, json_str, json_len + 1);
+    }
+    host_transmit((uint8_t *)json_tx_buffer, json_len);
 
     cJSON_Delete(root);
     cjson_pool_reset();
-    return json_str;
+    return json_tx_buffer;
 }
 
 /**
@@ -357,13 +386,17 @@ char* send_rgb_data(uint8_t r, uint8_t g, uint8_t b, uint8_t mode, const char *e
     }
 
     // 6. 生成带格式的JSON字符串（便于调试）
-    char *json_str = cJSON_Print(root);
+    char *json_str = cJSON_PrintUnformatted(root);
     uint16_t json_len = strlen(json_str);
-    host_transmit((uint8_t *)json_str, json_len);
+    
+    if (json_len < JSON_TX_BUFFER_SIZE) {
+        memcpy(json_tx_buffer, json_str, json_len + 1);
+    }
+    host_transmit((uint8_t *)json_tx_buffer, json_len);
 
     cJSON_Delete(root);
     cjson_pool_reset();
-    return json_str;
+    return json_tx_buffer;
 }
 
 /**
@@ -400,13 +433,17 @@ char* send_firmware_version_data(const char *software_version, const char *error
     }
 
     // 6. 生成带格式的JSON字符串（便于调试）
-    char *json_str = cJSON_Print(root);
+    char *json_str = cJSON_PrintUnformatted(root);
     uint16_t json_len = strlen(json_str);
-    host_transmit((uint8_t *)json_str, json_len);
+    
+    if (json_len < JSON_TX_BUFFER_SIZE) {
+        memcpy(json_tx_buffer, json_str, json_len + 1);
+    }
+    host_transmit((uint8_t *)json_tx_buffer, json_len);
 
     cJSON_Delete(root);
     cjson_pool_reset();
-    return json_str;
+    return json_tx_buffer;
 }
 
 
@@ -942,6 +979,9 @@ void uart_comm_task(void *argument)
     SysCtrlCmd_t cmd;
     
     UartMsg_t rx_msg;
+    
+    // 创建 cJSON 内存池互斥锁（必须在 FreeRTOS 内核初始化后调用）
+    cjson_pool_create_mutex();
     
     for(;;)
     {
