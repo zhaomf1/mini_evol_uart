@@ -343,12 +343,18 @@ void USART1_IRQHandler(void)
         // 计算接收到的数据长度
         uint16_t  recv_len = HOST_BUFFER_SIZE - __HAL_DMA_GET_COUNTER(&hdma_usart1_rx);
 
+        // 先备份数据到独立缓冲区（防止重启DMA后被下一帧覆盖）
+        if (recv_len > 0 && recv_len <= HOST_BUFFER_SIZE)
+        {
+            memcpy(host_rx_backup, pc_rx_buffer, recv_len);
+        }
+
         // 准备通过队列发送消息
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
         UartMsg_t msg;
 
-        //填充消息内容
-        msg.data_ptr = pc_rx_buffer; // 指向DMA接收缓冲区
+        //填充消息内容（指向备份缓冲区，不受后续DMA覆盖影响）
+        msg.data_ptr = host_rx_backup;
         msg.len = recv_len;          // 记录长度
 
         //发送消息队列

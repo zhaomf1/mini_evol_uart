@@ -2,11 +2,12 @@
 #include "usart.h"
 #include "cmsis_os2.h"
 #include <string.h>
+#include <stdio.h>
 
 /* 默认配置 */
 static ModbusConfig_t modbus_config = {
     .timeout_ms = 1000,      //修改等待时间
-    .retry_count = 2,       //重传次数
+    .retry_count = 10,       //重传次数
 };
 
 /* 状态统计 */
@@ -21,6 +22,129 @@ static ModbusStatus_t modbus_status = {
 
 static osMutexId_t modbus_mutex = NULL;
 osSemaphoreId_t modbus_rx_sem = NULL; // 串口3接收信号量
+
+static uint32_t slave_error_count[MODBUS_MAX_SLAVE_ID + 1];
+
+static ModbusErrLogEntry_t err_log[MODBUS_ERR_LOG_SIZE];
+static uint8_t  err_log_index  = 0;
+static uint32_t err_log_total  = 0;
+
+static const char* modbus_fc_name(uint8_t func)
+{
+    switch (func) {
+        case MODBUS_FC_READ_COILS:           return "READ_COILS(01)";
+        case MODBUS_FC_READ_DISCRETE_INPUTS: return "READ_DISCRETE(02)";
+        case MODBUS_FC_READ_HOLDING_REGS:    return "READ_HOLDING(03)";
+        case MODBUS_FC_READ_INPUT_REGS:      return "READ_INPUT(04)";
+        case MODBUS_FC_WRITE_SINGLE_COIL:    return "WRITE_COIL(05)";
+        case MODBUS_FC_WRITE_SINGLE_REG:     return "WRITE_REG(06)";
+        case MODBUS_FC_WRITE_MULTIPLE_REGS:  return "WRITE_MULTI(10)";
+        default: return "UNKNOWN_FC";
+    }
+}
+
+static const char* modbus_exception_name(uint8_t code)
+{
+    switch (code) {
+        case MODBUS_EXCEPTION_ILLEGAL_FUNCTION:      return "ILLEGAL_FUNC";
+        case MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS:  return "ILLEGAL_ADDR";
+        case MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE:    return "ILLEGAL_VAL";
+        case MODBUS_EXCEPTION_SLAVE_DEVICE_FAILURE:  return "SLAVE_FAILURE";
+        case MODBUS_EXCEPTION_ACKNOWLEDGE:           return "ACK";
+        case MODBUS_EXCEPTION_SLAVE_BUSY:            return "SLAVE_BUSY";
+        case MODBUS_EXCEPTION_NEGATIVE_ACKNOWLEDGE:  return "NACK";
+        case MODBUS_EXCEPTION_MEMORY_PARITY_ERROR:   return "MEM_PARITY";
+        default: return "UNKNOWN_EXC";
+    }
+}
+
+static void modbus_log_error(uint8_t slave, uint8_t func, int err, uint8_t exc, uint16_t detail)
+{
+    ModbusErrLogEntry_t *e = &err_log[err_log_index];
+
+    e->tick           = osKernelGetTickCount();
+    e->slave          = slave;
+    e->func           = func;
+    e->error_code     = (int8_t)err;
+    e->exception_code = exc;
+    e->detail         = detail;
+
+    err_log_index = (err_log_index + 1) % MODBUS_ERR_LOG_SIZE;
+    err_log_total++;
+
+    printf("[MODBUS_ERR] slave=0x%02X func=%s", slave, modbus_fc_name(func));
+
+    switch (err) {
+        case MODBUS_ERR_MUTEX:
+            printf(" MUTEX timeout\r\n");
+            break;
+        case MODBUS_ERR_SEND:
+            printf(" SEND failed\r\n");
+            break;
+        case MODBUS_ERR_TIMEOUT:
+            printf(" TIMEOUT no response\r\n");
+            break;
+        case MODBUS_ERR_CRC:
+            printf(" CRC recv=0x%04X\r\n", detail);
+            break;
+        case MODBUS_ERR_ADDR:
+            printf(" ADDR expected=0x%02X recv=0x%02X\r\n", slave, (uint8_t)detail);
+            break;
+        case MODBUS_ERR_EXCEPTION:
+            printf(" EXCEPTION 0x%02X(%s)\r\n", exc, modbus_exception_name(exc));
+            break;
+        case MODBUS_ERR_RESP_LEN:
+            printf(" RESP_LEN rx_len=%d\r\n", detail);
+            break;
+        case MODBUS_ERR_SEM:
+            printf(" SEM null\r\n");
+            break;
+        default:
+            printf(" UNKNOWN(%d)\r\n", err);
+            break;
+    }
+}
+
+void modbus_print_error_log(void)
+{
+    uint32_t count = (err_log_total > MODBUS_ERR_LOG_SIZE) ? MODBUS_ERR_LOG_SIZE : err_log_total;
+    uint8_t  start = (err_log_total > MODBUS_ERR_LOG_SIZE) ? err_log_index : 0;
+
+    printf("=== Modbus Error Log (%lu total, showing %lu) ===\r\n", err_log_total, count);
+
+    for (uint32_t i = 0; i < count; i++) {
+        uint8_t idx = (start + i) % MODBUS_ERR_LOG_SIZE;
+        ModbusErrLogEntry_t *e = &err_log[idx];
+
+        printf("#%lu tick=%lu slave=0x%02X func=%s err=",
+               i + 1, e->tick, e->slave, modbus_fc_name(e->func));
+
+        switch (e->error_code) {
+            case MODBUS_ERR_MUTEX:     printf("MUTEX"); break;
+            case MODBUS_ERR_SEND:      printf("SEND"); break;
+            case MODBUS_ERR_TIMEOUT:   printf("TIMEOUT"); break;
+            case MODBUS_ERR_CRC:       printf("CRC(0x%04X)", e->detail); break;
+            case MODBUS_ERR_ADDR:      printf("ADDR(recv=0x%02X)", (uint8_t)e->detail); break;
+            case MODBUS_ERR_EXCEPTION: printf("EXC(0x%02X_%s)", e->exception_code, modbus_exception_name(e->exception_code)); break;
+            case MODBUS_ERR_RESP_LEN:  printf("LEN(%d)", e->detail); break;
+            case MODBUS_ERR_SEM:       printf("SEM"); break;
+            default: printf("%d", e->error_code); break;
+        }
+        printf("\r\n");
+    }
+}
+
+void modbus_clear_error_log(void)
+{
+    memset(err_log, 0, sizeof(err_log));
+    err_log_index = 0;
+    err_log_total = 0;
+}
+
+uint32_t modbus_get_error_log_count(void)
+{
+    return err_log_total;
+}
 
 
 static const osMutexAttr_t modbus_mutex_attr = {
@@ -83,12 +207,15 @@ void modbus_create_rx_semaphore(void)
 static int modbus_transaction(uint8_t slave, uint8_t func, uint8_t *req, uint16_t req_len,
                               uint8_t *resp, uint16_t *resp_len, uint8_t *exception_code)
 {
-    uint8_t tx_buf[128];
+    uint8_t tx_buf[256];
     uint16_t crc;
 
-    // 获取互斥锁
-    if (!modbus_mutex || osMutexAcquire(modbus_mutex, 5000) != osOK) {
+    // 获取互斥锁（超时时间 = 2倍最坏事务时间，确保不会误超时）
+    uint32_t mutex_timeout = (uint32_t)(modbus_config.retry_count + 2) * 2 * modbus_config.timeout_ms;
+    if (!modbus_mutex || osMutexAcquire(modbus_mutex, mutex_timeout) != osOK) {
         modbus_status.error_count++;
+        if (slave <= MODBUS_MAX_SLAVE_ID) slave_error_count[slave]++;
+        modbus_log_error(slave, func, MODBUS_ERR_MUTEX, 0, 0);
         return MODBUS_ERR_MUTEX;
     }
     
@@ -96,6 +223,8 @@ static int modbus_transaction(uint8_t slave, uint8_t func, uint8_t *req, uint16_
     if (modbus_rx_sem == NULL) {
         osMutexRelease(modbus_mutex); 
         modbus_status.error_count++;
+        if (slave <= MODBUS_MAX_SLAVE_ID) slave_error_count[slave]++;
+        modbus_log_error(slave, func, MODBUS_ERR_SEM, 0, 0);
         return MODBUS_ERR_SEM;      
     }
 
@@ -114,6 +243,8 @@ static int modbus_transaction(uint8_t slave, uint8_t func, uint8_t *req, uint16_
     if (rs485_transmit(tx_buf, req_len + 4, modbus_config.timeout_ms) != 0) {
         osMutexRelease(modbus_mutex);
         modbus_status.error_count++;
+        if (slave <= MODBUS_MAX_SLAVE_ID) slave_error_count[slave]++;
+        modbus_log_error(slave, func, MODBUS_ERR_SEND, 0, 0);
         return MODBUS_ERR_SEND;
     }
     
@@ -124,6 +255,8 @@ static int modbus_transaction(uint8_t slave, uint8_t func, uint8_t *req, uint16_
         osMutexRelease(modbus_mutex);
         modbus_status.timeout_count++;
         modbus_status.error_count++;
+        if (slave <= MODBUS_MAX_SLAVE_ID) slave_error_count[slave]++;
+        modbus_log_error(slave, func, MODBUS_ERR_TIMEOUT, 0, 0);
         return MODBUS_ERR_TIMEOUT;
     }
 
@@ -133,6 +266,8 @@ static int modbus_transaction(uint8_t slave, uint8_t func, uint8_t *req, uint16_
     if (modbus_rx_len < 4) {
         osMutexRelease(modbus_mutex);
         modbus_status.error_count++;
+        if (slave <= MODBUS_MAX_SLAVE_ID) slave_error_count[slave]++;
+        modbus_log_error(slave, func, MODBUS_ERR_RESP_LEN, 0, modbus_rx_len);
         return MODBUS_ERR_RESP_LEN;
     }
 
@@ -140,6 +275,8 @@ static int modbus_transaction(uint8_t slave, uint8_t func, uint8_t *req, uint16_
     if (modbus_rtu_rx_backup[0] != slave) {
         osMutexRelease(modbus_mutex);
         modbus_status.error_count++;
+        if (slave <= MODBUS_MAX_SLAVE_ID) slave_error_count[slave]++;
+        modbus_log_error(slave, func, MODBUS_ERR_ADDR, 0, modbus_rtu_rx_backup[0]);
         return MODBUS_ERR_ADDR;
     }
 
@@ -150,17 +287,23 @@ static int modbus_transaction(uint8_t slave, uint8_t func, uint8_t *req, uint16_
         osMutexRelease(modbus_mutex);
         modbus_status.crc_error_count++;
         modbus_status.error_count++;
+        if (slave <= MODBUS_MAX_SLAVE_ID) slave_error_count[slave]++;
+        modbus_log_error(slave, func, MODBUS_ERR_CRC, 0, recv_crc);
         return MODBUS_ERR_CRC;
     }
 
     // 检查异常响应
     if (modbus_rtu_rx_backup[1] & 0x80) {
+        uint8_t exc = 0;
         if (exception_code && modbus_rx_len >= 3) {
-            *exception_code = modbus_rtu_rx_backup[2];
+            exc = modbus_rtu_rx_backup[2];
+            *exception_code = exc;
         }
         osMutexRelease(modbus_mutex);
         modbus_status.exception_count++;
         modbus_status.error_count++;
+        if (slave <= MODBUS_MAX_SLAVE_ID) slave_error_count[slave]++;
+        modbus_log_error(slave, func, MODBUS_ERR_EXCEPTION, exc, 0);
         return MODBUS_ERR_EXCEPTION;
     }
 
@@ -176,10 +319,21 @@ static int modbus_transaction(uint8_t slave, uint8_t func, uint8_t *req, uint16_
         if (modbus_rx_len < 3) {
              osMutexRelease(modbus_mutex);
              modbus_status.error_count++;
+             if (slave <= MODBUS_MAX_SLAVE_ID) slave_error_count[slave]++;
+             modbus_log_error(slave, func, MODBUS_ERR_RESP_LEN, 0, modbus_rx_len);
              return MODBUS_ERR_RESP_LEN;
         }
         data_ptr = &modbus_rtu_rx_backup[3]; // 跳过 Byte Count
         data_len = modbus_rtu_rx_backup[2];  // 数据长度等于 Byte Count
+
+        // Byte Count 合理性校验：防止帧间 IDLE 误触发导致半帧
+        if (3 + data_len + 2 > modbus_rx_len) {
+            osMutexRelease(modbus_mutex);
+            modbus_status.error_count++;
+            if (slave <= MODBUS_MAX_SLAVE_ID) slave_error_count[slave]++;
+            modbus_log_error(slave, func, MODBUS_ERR_RESP_LEN, 0, modbus_rx_len);
+            return MODBUS_ERR_RESP_LEN;
+        }
     }
 
     // 拷贝数据到用户缓冲区
@@ -216,6 +370,17 @@ ModbusStatus_t modbus_get_status(void)
 void modbus_reset_status(void)
 {
     memset(&modbus_status, 0, sizeof(ModbusStatus_t));
+}
+
+uint32_t modbus_get_slave_error_count(uint8_t slave)
+{
+    if (slave > MODBUS_MAX_SLAVE_ID) return 0;
+    return slave_error_count[slave];
+}
+
+void modbus_reset_all_slave_errors(void)
+{
+    memset(slave_error_count, 0, sizeof(slave_error_count));
 }
 
 
@@ -261,16 +426,20 @@ int modbus_read_holding_registers(uint8_t slave, uint16_t start_addr, uint16_t c
     for (uint8_t i = 0; i <= modbus_config.retry_count; i++) {
         ret = modbus_transaction(slave, MODBUS_FC_READ_HOLDING_REGS, req, 4, (uint8_t*)dest, NULL, &exception_code);
         if (ret == MODBUS_OK) {
+            if (i > 0) printf("[MODBUS_OK] slave=0x%02X recovered retry=%d\r\n", slave, i);
             return ret;
         }
-        // 对于超时和CRC错误进行重试
-        if (ret != MODBUS_ERR_TIMEOUT && ret != MODBUS_ERR_CRC) {
+        if (ret == MODBUS_ERR_EXCEPTION &&
+            exception_code >= MODBUS_EXCEPTION_ILLEGAL_FUNCTION &&
+            exception_code <= MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
             break;
         }
-        // 重试间隔
-        osDelay(10);
+        if (i < modbus_config.retry_count) {
+            osDelay(10);
+        }
     }
     
+    printf("[MODBUS_FAIL] slave=0x%02X func=READ_HOLDING all retries exhausted err=%d\r\n", slave, ret);
     return ret;
 }
 
@@ -312,16 +481,20 @@ int modbus_read_input_registers(uint8_t slave, uint16_t start_addr, uint16_t cou
     for (uint8_t i = 0; i <= modbus_config.retry_count; i++) {
         ret = modbus_transaction(slave, MODBUS_FC_READ_INPUT_REGS, req, 4, (uint8_t*)dest, NULL, &exception_code);
         if (ret == MODBUS_OK) {
+            if (i > 0) printf("[MODBUS_OK] slave=0x%02X recovered retry=%d\r\n", slave, i);
             return ret;
         }
-        // 对于超时和CRC错误进行重试
-        if (ret != MODBUS_ERR_TIMEOUT && ret != MODBUS_ERR_CRC) {
+        if (ret == MODBUS_ERR_EXCEPTION &&
+            exception_code >= MODBUS_EXCEPTION_ILLEGAL_FUNCTION &&
+            exception_code <= MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
             break;
         }
-        // 重试间隔
-        osDelay(10);
+        if (i < modbus_config.retry_count) {
+            osDelay(10);
+        }
     }
     
+    printf("[MODBUS_FAIL] slave=0x%02X func=READ_INPUT all retries exhausted err=%d\r\n", slave, ret);
     return ret;
 }
 
@@ -356,16 +529,20 @@ int modbus_write_single_register(uint8_t slave, uint16_t addr, uint16_t value)
     for (uint8_t i = 0; i <= modbus_config.retry_count; i++) {
         ret = modbus_transaction(slave, MODBUS_FC_WRITE_SINGLE_REG, req, 4, NULL, NULL, &exception_code);
         if (ret == MODBUS_OK) {
+            if (i > 0) printf("[MODBUS_OK] slave=0x%02X recovered retry=%d\r\n", slave, i);
             return ret;
         }
-        // 对于超时和CRC错误进行重试
-        if (ret != MODBUS_ERR_TIMEOUT && ret != MODBUS_ERR_CRC) {
+        if (ret == MODBUS_ERR_EXCEPTION &&
+            exception_code >= MODBUS_EXCEPTION_ILLEGAL_FUNCTION &&
+            exception_code <= MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
             break;
         }
-        // 重试间隔
-        osDelay(10);
+        if (i < modbus_config.retry_count) {
+            osDelay(10);
+        }
     }
     
+    printf("[MODBUS_FAIL] slave=0x%02X func=WRITE_REG all retries exhausted err=%d\r\n", slave, ret);
     return ret;
 }
 
@@ -412,16 +589,20 @@ int modbus_write_multiple_registers(uint8_t slave, uint16_t start_addr, uint16_t
     for (uint8_t i = 0; i <= modbus_config.retry_count; i++) {
         ret = modbus_transaction(slave, MODBUS_FC_WRITE_MULTIPLE_REGS, req, 5 + count*2, NULL, NULL, &exception_code);
         if (ret == MODBUS_OK) {
+            if (i > 0) printf("[MODBUS_OK] slave=0x%02X recovered retry=%d\r\n", slave, i);
             return ret;
         }
-        // 对于超时和CRC错误进行重试
-        if (ret != MODBUS_ERR_TIMEOUT && ret != MODBUS_ERR_CRC) {
+        if (ret == MODBUS_ERR_EXCEPTION &&
+            exception_code >= MODBUS_EXCEPTION_ILLEGAL_FUNCTION &&
+            exception_code <= MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
             break;
         }
-        // 重试间隔
-        osDelay(10);
+        if (i < modbus_config.retry_count) {
+            osDelay(10);
+        }
     }
     
+    printf("[MODBUS_FAIL] slave=0x%02X func=WRITE_MULTI all retries exhausted err=%d\r\n", slave, ret);
     return ret;
 }
 
@@ -465,19 +646,23 @@ int modbus_read_coils(uint8_t slave, uint16_t start_addr, uint16_t count, uint8_
     for (uint8_t i = 0; i <= modbus_config.retry_count; i++) {
         ret = modbus_transaction(slave, MODBUS_FC_READ_COILS, req, 4, data, NULL, &exception_code);
         if (ret == MODBUS_OK) {
+            if (i > 0) printf("[MODBUS_OK] slave=0x%02X recovered retry=%d\r\n", slave, i);
             for (uint16_t i = 0; i < count; i++) {
                 dest[i] = (data[i/8] >> (i%8)) & 1;
             }
             return ret;
         }
-        // 对于超时和CRC错误进行重试
-        if (ret != MODBUS_ERR_TIMEOUT && ret != MODBUS_ERR_CRC) {
+        if (ret == MODBUS_ERR_EXCEPTION &&
+            exception_code >= MODBUS_EXCEPTION_ILLEGAL_FUNCTION &&
+            exception_code <= MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
             break;
         }
-        // 重试间隔
-        osDelay(10);
+        if (i < modbus_config.retry_count) {
+            osDelay(10);
+        }
     }
     
+    printf("[MODBUS_FAIL] slave=0x%02X func=READ_COILS all retries exhausted err=%d\r\n", slave, ret);
     return ret;
 }
 
@@ -513,15 +698,19 @@ int modbus_write_single_coil(uint8_t slave, uint16_t addr, uint8_t state)
     for (uint8_t i = 0; i <= modbus_config.retry_count; i++) {
         ret = modbus_transaction(slave, MODBUS_FC_WRITE_SINGLE_COIL, req, 4, NULL, NULL, &exception_code);
         if (ret == MODBUS_OK) {
+            if (i > 0) printf("[MODBUS_OK] slave=0x%02X recovered retry=%d\r\n", slave, i);
             return ret;
         }
-        // 对于超时和CRC错误进行重试
-        if (ret != MODBUS_ERR_TIMEOUT && ret != MODBUS_ERR_CRC) {
+        if (ret == MODBUS_ERR_EXCEPTION &&
+            exception_code >= MODBUS_EXCEPTION_ILLEGAL_FUNCTION &&
+            exception_code <= MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
             break;
         }
-        // 重试间隔
-        osDelay(10);
+        if (i < modbus_config.retry_count) {
+            osDelay(10);
+        }
     }
     
+    printf("[MODBUS_FAIL] slave=0x%02X func=WRITE_COIL all retries exhausted err=%d\r\n", slave, ret);
     return ret;
 }

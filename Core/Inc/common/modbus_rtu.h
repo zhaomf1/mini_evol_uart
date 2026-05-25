@@ -59,6 +59,8 @@ typedef struct {
     uint32_t exception_count;      /* 异常响应次数 */
 } ModbusStatus_t;
 
+#define MODBUS_MAX_SLAVE_ID 247
+
 /* 公共函数 */
 int modbus_create_mutex(void);
 void modbus_create_rx_semaphore(void);
@@ -68,6 +70,24 @@ uint16_t modbus_crc16(uint8_t *buffer, uint16_t len);
 /* 状态函数 */
 ModbusStatus_t modbus_get_status(void);
 void modbus_reset_status(void);
+uint32_t modbus_get_slave_error_count(uint8_t slave);
+void modbus_reset_all_slave_errors(void);
+
+/* 错误日志 */
+#define MODBUS_ERR_LOG_SIZE 32
+
+typedef struct {
+    uint32_t tick;
+    uint8_t  slave;
+    uint8_t  func;
+    int8_t   error_code;
+    uint8_t  exception_code;
+    uint16_t detail;
+} ModbusErrLogEntry_t;
+
+void modbus_print_error_log(void);
+void modbus_clear_error_log(void);
+uint32_t modbus_get_error_log_count(void);
 
 /* Modbus API函数 */
 int modbus_read_holding_registers(uint8_t slave, uint16_t start_addr, uint16_t count, uint16_t *dest);

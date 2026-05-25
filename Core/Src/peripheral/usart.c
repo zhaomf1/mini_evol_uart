@@ -24,7 +24,8 @@
 #include "main.h"
 
 /* USER CODE BEGIN 0 */
-uint8_t pc_rx_buffer[HOST_BUFFER_SIZE];              // 串口1
+uint8_t pc_rx_buffer[HOST_BUFFER_SIZE];              // 串口1 DMA接收缓冲区
+uint8_t host_rx_backup[HOST_BUFFER_SIZE];            // 串口1 数据备份（防DMA覆盖）
 uint8_t modbus_rtu_rx_buf[MODBUS_BUFFER_SIZE],modbus_rtu_rx_backup[MODBUS_BUFFER_SIZE];// 串口3
 volatile uint16_t modbus_rx_len = 0;            //备份数据长度，其他函数调用，防止中断更改
 
@@ -685,12 +686,20 @@ int rs485_transmit(uint8_t *data, uint16_t len, uint32_t timeout)
 }
 
 /**
- * @brief 串口1通讯，与上位机通讯
+ * @brief 串口1通讯，与上位机通讯（DMA发送，带忙保护）
  */
 int host_transmit(uint8_t *data, uint16_t len)
 {
+    uint32_t timeout = 10000;
+    while (huart1.gState == HAL_UART_STATE_BUSY_TX && --timeout)
+    {
+    }
+    if (huart1.gState == HAL_UART_STATE_BUSY_TX)
+    {
+        HAL_UART_AbortTransmit(&huart1);
+    }
     HAL_StatusTypeDef status = HAL_UART_Transmit_DMA(&huart1, data, len);
-    printf("[DEBUG] SEND UART data::\n%.*s\n", len, data);
+    // printf("[DEBUG] SEND UART data:\n%.*s\n", len, data);
     return (status == HAL_OK) ? 0 : -1;
 }
 

@@ -987,7 +987,7 @@ void uart_comm_task(void *argument)
     {
         if (osMessageQueueGet(uartRxQueueHandle, &rx_msg, NULL, osWaitForever) == osOK)
         {
-            printf("[DEBUG] Receive UART data:\n%.*s\n",rx_msg.len, rx_msg.data_ptr);
+            // printf("[DEBUG] Receive UART data:\n%.*s\n",rx_msg.len, rx_msg.data_ptr);
             int ret = parse_motor_ctrl_json((const char *)rx_msg.data_ptr, &cmd);
         }
 
