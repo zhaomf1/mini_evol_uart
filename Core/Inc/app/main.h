@@ -48,7 +48,7 @@ extern uint8_t host_rx_backup[HOST_BUFFER_SIZE];            // 串口1 数据备
 extern uint8_t modbus_rtu_rx_buf[MODBUS_BUFFER_SIZE],modbus_rtu_rx_backup[MODBUS_BUFFER_SIZE];// 串口3
 /* USER CODE END EC */
 
-#define FIRMWARE_VERSION "BetaV1.1.1"       //固件版本
+#define FIRMWARE_VERSION "BetaV1.2.1"        //固件版本
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
 
