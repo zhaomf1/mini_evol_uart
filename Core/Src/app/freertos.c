@@ -164,13 +164,16 @@ void MX_FREERTOS_Init(void)
  * @retval None
  */
 /* USER CODE END Header_StartDefaultTask */
+#define TEST_CODE 0
 void StartDefaultTask(void *argument)
 {
     /* USER CODE BEGIN StartDefaultTask */
+#if TEST_CODE
     uint8_t first_enter = 1;
     uint16_t color_cnt = 0;
     uint16_t temp_alarm_cnt = 0;
     uint16_t temp_alarm_info = 0;
+#endif
 
 
     /* Infinite loop */
@@ -183,19 +186,19 @@ void StartDefaultTask(void *argument)
 
         // OD测试程序
         {
-            #if 0
+#if TEST_CODE
                 extern int od_ctrl_read_value(uint16_t *od);
                 uint16_t od = 0;
                 int ret = od_ctrl_read_value(&od);
                 printf("OD value = %d\n",od);
             
                 osDelay(100);
-            #endif
+#endif
         }
 
         //直流无刷电机测试程序
         {
-            #if 0
+#if TEST_CODE
             extern int bldc_ctrl_enable(void);
             extern int bldc_ctrl_set_speed(ModbusAddr_t bldc_addr,uint16_t speed);
             extern int bldc_ctrl_set_dir(uint16_t dir);
@@ -224,13 +227,13 @@ void StartDefaultTask(void *argument)
             if(cnt >= 2500)
                 cnt = 0;
 
-            #endif
+#endif
         }
         
 
         //温控测试程序
         {
-            #if 0
+#if TEST_CODE
             extern int temp_ctrl_set_temperature(uint16_t temperature);
             extern int temp_ctrl_read_temperature(uint16_t *temperature);
             extern int temp_ctrl_read_alarm(void);
@@ -248,22 +251,22 @@ void StartDefaultTask(void *argument)
             printf("tempearture = %.2f\n",f_temp);
             temp_ctrl_read_alarm();
 
-            #endif
+#endif
         }
 
         //PH测试程序
         {
-            #if 0
+#if TEST_CODE
             extern int ph_ctrl_read_value(float *od);
             float ph = 0;
             int ret = ph_ctrl_read_value(&ph);
             // printf("PH value = %.2f\n",ph);
-            #endif
+#endif
         }
 
         //RGB测试程序
         {
-            #if 0
+#if TEST_CODE
             if(color_cnt%3 == 0)
             {
                 rgb_set_color((RgbColor_t)RGB_RED);
@@ -280,11 +283,12 @@ void StartDefaultTask(void *argument)
             color_cnt++;
             if(color_cnt >= 1000)
                 color_cnt = 0;
-            #endif
+#endif
         }
 
-
+#if TEST_CODE
         first_enter = 0;
+#endif
         
         osDelay(500);
     }

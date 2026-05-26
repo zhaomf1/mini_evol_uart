@@ -63,3 +63,4 @@ mini_evol\usart_comm.o: ..\Core\Inc\app\dev_od_ctrl.h
 mini_evol\usart_comm.o: ..\Core\Inc\app\dev_ph_ctrl.h
 mini_evol\usart_comm.o: ..\Core\Inc\app\dev_temp_ctrl.h
 mini_evol\usart_comm.o: ..\Core\Inc\app\error_code.h
+mini_evol\usart_comm.o: ..\Core\Inc\peripheral\tim.h

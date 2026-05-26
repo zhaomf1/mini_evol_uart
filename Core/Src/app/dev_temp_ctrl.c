@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "dev_temp_ctrl.h"
 #include "modbus_rtu.h"
 #include "app_control.h"

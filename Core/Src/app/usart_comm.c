@@ -13,6 +13,7 @@
 #include "dev_ph_ctrl.h"
 #include "dev_temp_ctrl.h"
 #include "error_code.h"
+#include "tim.h"
 
 // JSON 发送缓冲区（静态分配，避免返回内存池指针）
 #define JSON_TX_BUFFER_SIZE 256
@@ -534,6 +535,7 @@ static void parse_step_motor(cJSON *root, SysCtrlCmd_t *cmd) {
         {
             case STEP_MOTOR_PH:
                 TIM1_Init(39);
+				extern void TMC2209_init(uint8_t slaveAddress,uint8_t slaveIRUN,uint8_t slaveMRES);
                 TMC2209_init(0,10,4); 
                 break;
 
@@ -957,7 +959,6 @@ int parse_motor_ctrl_json(const char *json_str, SysCtrlCmd_t *cmd) {
         case CMD_VERSION:
             cmd->cmd_type = CMD_VERSION;
             parse_version_info(root, cmd);
-            break;
             break;
         default:
             cJSON_Delete(root);

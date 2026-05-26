@@ -145,6 +145,8 @@ void get_ph_kb_value(float *ph_k, float *ph_b);
 void set_ph_ctrl_start(PhCtrl_t ph_data);
 void set_ph_ctrl_stop(void);
 void phControlTask(void *pvParameters);//ph流程任务
+HAL_StatusTypeDef at24c02_save_ph_k(float k);
+HAL_StatusTypeDef at24c02_save_ph_b(float b);
 
 //RGB三色灯控制
 void rgb_set_color(RgbColor_t color);

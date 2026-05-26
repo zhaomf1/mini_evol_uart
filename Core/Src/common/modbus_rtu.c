@@ -58,6 +58,15 @@ static const char* modbus_exception_name(uint8_t code)
     }
 }
 
+static void modbus_hex_dump(const uint8_t *data, uint16_t len)
+{
+    printf("       RX_RAW[%d]:", len);
+    for (uint16_t i = 0; i < len && i < 64; i++) {
+        printf(" %02X", data[i]);
+    }
+    printf("\r\n");
+}
+
 static void modbus_log_error(uint8_t slave, uint8_t func, int err, uint8_t exc, uint16_t detail)
 {
     ModbusErrLogEntry_t *e = &err_log[err_log_index];
@@ -86,15 +95,19 @@ static void modbus_log_error(uint8_t slave, uint8_t func, int err, uint8_t exc, 
             break;
         case MODBUS_ERR_CRC:
             printf(" CRC recv=0x%04X\r\n", detail);
+            if (modbus_rx_len > 0) modbus_hex_dump(modbus_rtu_rx_backup, modbus_rx_len);
             break;
         case MODBUS_ERR_ADDR:
             printf(" ADDR expected=0x%02X recv=0x%02X\r\n", slave, (uint8_t)detail);
+            if (modbus_rx_len > 0) modbus_hex_dump(modbus_rtu_rx_backup, modbus_rx_len);
             break;
         case MODBUS_ERR_EXCEPTION:
             printf(" EXCEPTION 0x%02X(%s)\r\n", exc, modbus_exception_name(exc));
+            if (modbus_rx_len > 0) modbus_hex_dump(modbus_rtu_rx_backup, modbus_rx_len);
             break;
         case MODBUS_ERR_RESP_LEN:
             printf(" RESP_LEN rx_len=%d\r\n", detail);
+            if (modbus_rx_len > 0) modbus_hex_dump(modbus_rtu_rx_backup, modbus_rx_len);
             break;
         case MODBUS_ERR_SEM:
             printf(" SEM null\r\n");
