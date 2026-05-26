@@ -442,11 +442,6 @@ int modbus_read_holding_registers(uint8_t slave, uint16_t start_addr, uint16_t c
             if (i > 0) printf("[MODBUS_OK] slave=0x%02X recovered retry=%d\r\n", slave, i);
             return ret;
         }
-        if (ret == MODBUS_ERR_EXCEPTION &&
-            exception_code >= MODBUS_EXCEPTION_ILLEGAL_FUNCTION &&
-            exception_code <= MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
-            break;
-        }
         if (i < modbus_config.retry_count) {
             osDelay(10);
         }
@@ -497,11 +492,6 @@ int modbus_read_input_registers(uint8_t slave, uint16_t start_addr, uint16_t cou
             if (i > 0) printf("[MODBUS_OK] slave=0x%02X recovered retry=%d\r\n", slave, i);
             return ret;
         }
-        if (ret == MODBUS_ERR_EXCEPTION &&
-            exception_code >= MODBUS_EXCEPTION_ILLEGAL_FUNCTION &&
-            exception_code <= MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
-            break;
-        }
         if (i < modbus_config.retry_count) {
             osDelay(10);
         }
@@ -544,11 +534,6 @@ int modbus_write_single_register(uint8_t slave, uint16_t addr, uint16_t value)
         if (ret == MODBUS_OK) {
             if (i > 0) printf("[MODBUS_OK] slave=0x%02X recovered retry=%d\r\n", slave, i);
             return ret;
-        }
-        if (ret == MODBUS_ERR_EXCEPTION &&
-            exception_code >= MODBUS_EXCEPTION_ILLEGAL_FUNCTION &&
-            exception_code <= MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
-            break;
         }
         if (i < modbus_config.retry_count) {
             osDelay(10);
@@ -605,11 +590,6 @@ int modbus_write_multiple_registers(uint8_t slave, uint16_t start_addr, uint16_t
             if (i > 0) printf("[MODBUS_OK] slave=0x%02X recovered retry=%d\r\n", slave, i);
             return ret;
         }
-        if (ret == MODBUS_ERR_EXCEPTION &&
-            exception_code >= MODBUS_EXCEPTION_ILLEGAL_FUNCTION &&
-            exception_code <= MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
-            break;
-        }
         if (i < modbus_config.retry_count) {
             osDelay(10);
         }
@@ -665,11 +645,6 @@ int modbus_read_coils(uint8_t slave, uint16_t start_addr, uint16_t count, uint8_
             }
             return ret;
         }
-        if (ret == MODBUS_ERR_EXCEPTION &&
-            exception_code >= MODBUS_EXCEPTION_ILLEGAL_FUNCTION &&
-            exception_code <= MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
-            break;
-        }
         if (i < modbus_config.retry_count) {
             osDelay(10);
         }
@@ -713,11 +688,6 @@ int modbus_write_single_coil(uint8_t slave, uint16_t addr, uint8_t state)
         if (ret == MODBUS_OK) {
             if (i > 0) printf("[MODBUS_OK] slave=0x%02X recovered retry=%d\r\n", slave, i);
             return ret;
-        }
-        if (ret == MODBUS_ERR_EXCEPTION &&
-            exception_code >= MODBUS_EXCEPTION_ILLEGAL_FUNCTION &&
-            exception_code <= MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
-            break;
         }
         if (i < modbus_config.retry_count) {
             osDelay(10);

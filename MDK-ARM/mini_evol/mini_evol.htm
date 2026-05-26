@@ -3,7 +3,7 @@
 <title>Static Call Graph - [mini_evol\mini_evol.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image mini_evol\mini_evol.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060061: Last Updated: Tue May 26 11:27:14 2026
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060061: Last Updated: Tue May 26 15:33:10 2026
 <BR><P>
 <H3>Maximum Stack Usage =        816 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -2695,7 +2695,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[11c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_FREERTOS_Init
 </UL>
 
-<P><STRONG><a name="[1a8]"></a>modbus_read_holding_registers</STRONG> (Thumb, 158 bytes, Stack size 48 bytes, modbus_rtu.o(i.modbus_read_holding_registers))
+<P><STRONG><a name="[1a8]"></a>modbus_read_holding_registers</STRONG> (Thumb, 140 bytes, Stack size 48 bytes, modbus_rtu.o(i.modbus_read_holding_registers))
 <BR><BR>[Stack]<UL><LI>Max Depth = 504<LI>Call Chain = modbus_read_holding_registers &rArr; modbus_transaction &rArr; osMutexAcquire &rArr; xQueueTakeMutexRecursive &rArr; xQueueSemaphoreTake &rArr; xTaskResumeAll &rArr; xTaskIncrementTick
 </UL>
 <BR>[Calls]<UL><LI><a href="#[12f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osDelay
@@ -2706,7 +2706,7 @@ Global Symbols
 <LI><a href="#[1af]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;od_ctrl_read_value
 </UL>
 
-<P><STRONG><a name="[1aa]"></a>modbus_read_input_registers</STRONG> (Thumb, 158 bytes, Stack size 48 bytes, modbus_rtu.o(i.modbus_read_input_registers))
+<P><STRONG><a name="[1aa]"></a>modbus_read_input_registers</STRONG> (Thumb, 140 bytes, Stack size 48 bytes, modbus_rtu.o(i.modbus_read_input_registers))
 <BR><BR>[Stack]<UL><LI>Max Depth = 504<LI>Call Chain = modbus_read_input_registers &rArr; modbus_transaction &rArr; osMutexAcquire &rArr; xQueueTakeMutexRecursive &rArr; xQueueSemaphoreTake &rArr; xTaskResumeAll &rArr; xTaskIncrementTick
 </UL>
 <BR>[Calls]<UL><LI><a href="#[12f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osDelay
@@ -2717,7 +2717,7 @@ Global Symbols
 <LI><a href="#[218]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;temp_ctrl_read_alarm
 </UL>
 
-<P><STRONG><a name="[1ae]"></a>modbus_write_single_coil</STRONG> (Thumb, 150 bytes, Stack size 48 bytes, modbus_rtu.o(i.modbus_write_single_coil))
+<P><STRONG><a name="[1ae]"></a>modbus_write_single_coil</STRONG> (Thumb, 132 bytes, Stack size 48 bytes, modbus_rtu.o(i.modbus_write_single_coil))
 <BR><BR>[Stack]<UL><LI>Max Depth = 504<LI>Call Chain = modbus_write_single_coil &rArr; modbus_transaction &rArr; osMutexAcquire &rArr; xQueueTakeMutexRecursive &rArr; xQueueSemaphoreTake &rArr; xTaskResumeAll &rArr; xTaskIncrementTick
 </UL>
 <BR>[Calls]<UL><LI><a href="#[12f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osDelay
@@ -2727,7 +2727,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[1e3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;temp_ctrl_switch_ctrl_temperature
 </UL>
 
-<P><STRONG><a name="[166]"></a>modbus_write_single_register</STRONG> (Thumb, 144 bytes, Stack size 48 bytes, modbus_rtu.o(i.modbus_write_single_register))
+<P><STRONG><a name="[166]"></a>modbus_write_single_register</STRONG> (Thumb, 126 bytes, Stack size 48 bytes, modbus_rtu.o(i.modbus_write_single_register))
 <BR><BR>[Stack]<UL><LI>Max Depth = 504<LI>Call Chain = modbus_write_single_register &rArr; modbus_transaction &rArr; osMutexAcquire &rArr; xQueueTakeMutexRecursive &rArr; xQueueSemaphoreTake &rArr; xTaskResumeAll &rArr; xTaskIncrementTick
 </UL>
 <BR>[Calls]<UL><LI><a href="#[12f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osDelay
