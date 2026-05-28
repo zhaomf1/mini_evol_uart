@@ -18,6 +18,7 @@
  */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+#include <string.h>
 #include "usart.h"
 #include "stdio.h"
 #include "usart.h"
@@ -701,6 +702,52 @@ int host_transmit(uint8_t *data, uint16_t len)
     HAL_StatusTypeDef status = HAL_UART_Transmit_DMA(&huart1, data, len);
     // printf("[DEBUG] SEND UART data:\n%.*s\n", len, data);
     return (status == HAL_OK) ? 0 : -1;
+}
+
+static uint16_t modbus_rx_base = 0;
+
+/**
+ * @brief 标记Modbus接收窗口起点
+ * @note  发送请求前调用，记录DMA已收字节作为基准偏移
+ *        这样后续接收时可以排除回显/残留数据
+ */
+void modbus_rs485_rx_begin(void)
+{
+    modbus_rx_base = MODBUS_BUFFER_SIZE - __HAL_DMA_GET_COUNTER(&hdma_usart3_rx);
+    osSemaphoreAcquire(modbus_rx_sem, 0);
+}
+
+/**
+ * @brief 等待Modbus帧完整，停DMA取数据，重启DMA
+ * @param settle_ms 静默等待时间(ms)，用于确保帧尾巴字节全部到达
+ * @return 本次响应净字节数（已排除发送前回显/残留数据）
+ */
+uint16_t modbus_rs485_rx_end(uint32_t settle_ms)
+{
+    osDelay(settle_ms);
+
+    __HAL_UART_DISABLE_IT(&huart3, UART_IT_IDLE);
+    HAL_UART_DMAStop(&huart3);
+
+    uint16_t total_rx = MODBUS_BUFFER_SIZE - __HAL_DMA_GET_COUNTER(&hdma_usart3_rx);
+    uint16_t rx_len;
+    if (total_rx >= modbus_rx_base) {
+        rx_len = total_rx - modbus_rx_base;
+    } else {
+        rx_len = total_rx;
+    }
+
+    if (rx_len > 0 && rx_len <= sizeof(modbus_rtu_rx_backup)) {
+        memcpy(modbus_rtu_rx_backup, modbus_rtu_rx_buf + modbus_rx_base, rx_len);
+    }
+
+    HAL_UART_Receive_DMA(&huart3, modbus_rtu_rx_buf, MODBUS_BUFFER_SIZE);
+    __HAL_UART_ENABLE_IT(&huart3, UART_IT_IDLE);
+    __HAL_UART_CLEAR_IDLEFLAG(&huart3);
+
+    modbus_rx_base = 0;
+
+    return rx_len;
 }
 
 

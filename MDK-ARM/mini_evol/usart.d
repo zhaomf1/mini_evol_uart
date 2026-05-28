@@ -1,4 +1,5 @@
 mini_evol\usart.o: ..\Core\Src\peripheral\usart.c
+mini_evol\usart.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 mini_evol\usart.o: ..\Core\Inc\peripheral\usart.h
 mini_evol\usart.o: ..\Core\Inc\app\main.h
 mini_evol\usart.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h

@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
+#include <stdio.h>
 #include "FreeRTOS.h"
 #include "task.h"
 #include "main.h"
@@ -26,6 +27,7 @@
 #include "app_control.h"
 #include "usart_comm.h"
 #include "dev_temp_ctrl.h"
+
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -307,6 +309,7 @@ void temp_alarm_task(void *argument)
 
     for (;;)
     {
+		printf("temp alarm monitoring\n");
         temp_ctrl_check_and_update_alarm();
         osDelay(60000);
     }

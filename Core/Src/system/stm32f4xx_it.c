@@ -398,32 +398,15 @@ void USART2_IRQHandler(void)
 void USART3_IRQHandler(void)
 {
     /* USER CODE BEGIN USART3_IRQn 0 */
-    // 检查是否是空闲中断
     if (__HAL_UART_GET_FLAG(&huart3, UART_FLAG_IDLE) != RESET)
     {
-        // 清除空闲中断标志   若不清除 IDLE 标志，中断会持续触发，导致 CPU 陷入死循环，无法处理其他任务
         __HAL_UART_CLEAR_IDLEFLAG(&huart3);
 
-        // 停止DMA接收
-        HAL_UART_DMAStop(&huart3);
-
-        // 计算接收到的数据长度
-        modbus_rx_len  = MODBUS_BUFFER_SIZE - __HAL_DMA_GET_COUNTER(&hdma_usart3_rx);
-
-        // 复制数据到备份缓冲区（防止被后续接收覆盖）
-        if (modbus_rx_len > 0 && modbus_rx_len <= sizeof(modbus_rtu_rx_backup))
-        {
-            memcpy(modbus_rtu_rx_backup, modbus_rtu_rx_buf, modbus_rx_len);
-        }
-
-        //释放信号量，通知 Modbus 任务数据到了
         if (modbus_rx_sem != NULL) {
             BaseType_t xHigherPriorityTaskWoken = pdFALSE;
             osSemaphoreRelease(modbus_rx_sem);
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
-        // 重新启动DMA接收
-        HAL_UART_Receive_DMA(&huart3, modbus_rtu_rx_buf, MODBUS_BUFFER_SIZE);
     }
     /* USER CODE END USART3_IRQn 0 */
     HAL_UART_IRQHandler(&huart3);

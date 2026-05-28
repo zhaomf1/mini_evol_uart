@@ -66,6 +66,8 @@ void uart_dma_init(void);
 int rs485_transmit(uint8_t *data, uint16_t len, uint32_t timeout);
 void modbus_create_rx_semaphore(void);
 int host_transmit(uint8_t *data, uint16_t len);
+void modbus_rs485_rx_begin(void);
+uint16_t modbus_rs485_rx_end(uint32_t settle_ms);
 
 
 /* USER CODE END Prototypes */

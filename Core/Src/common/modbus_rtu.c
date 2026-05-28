@@ -6,8 +6,8 @@
 
 /* 默认配置 */
 static ModbusConfig_t modbus_config = {
-    .timeout_ms = 1000,      //修改等待时间
-    .retry_count = 10,       //重传次数
+    .timeout_ms = 200,      //修改等待时间
+    .retry_count = 5,       //重传次数
 };
 
 /* 状态统计 */
@@ -231,14 +231,14 @@ static int modbus_transaction(uint8_t slave, uint8_t func, uint8_t *req, uint16_
         modbus_log_error(slave, func, MODBUS_ERR_MUTEX, 0, 0);
         return MODBUS_ERR_MUTEX;
     }
-    
+
     // 获取信号量
     if (modbus_rx_sem == NULL) {
-        osMutexRelease(modbus_mutex); 
+        osMutexRelease(modbus_mutex);
         modbus_status.error_count++;
         if (slave <= MODBUS_MAX_SLAVE_ID) slave_error_count[slave]++;
         modbus_log_error(slave, func, MODBUS_ERR_SEM, 0, 0);
-        return MODBUS_ERR_SEM;      
+        return MODBUS_ERR_SEM;
     }
 
     // 2. 组包发送
@@ -249,8 +249,7 @@ static int modbus_transaction(uint8_t slave, uint8_t func, uint8_t *req, uint16_
     tx_buf[req_len + 2] = crc & 0xFF;
     tx_buf[req_len + 3] = (crc >> 8) & 0xFF;
 
-    // 清除之前的信号量 (非阻塞尝试获取，如果有残留的话)
-    osSemaphoreAcquire(modbus_rx_sem, 0);
+    modbus_rs485_rx_begin();
 
     // 发送数据
     if (rs485_transmit(tx_buf, req_len + 4, modbus_config.timeout_ms) != 0) {
@@ -260,7 +259,7 @@ static int modbus_transaction(uint8_t slave, uint8_t func, uint8_t *req, uint16_
         modbus_log_error(slave, func, MODBUS_ERR_SEND, 0, 0);
         return MODBUS_ERR_SEND;
     }
-    
+
     modbus_status.tx_count++;
 
     // 3. 等待接收完成 (使用信号量挂起任务，释放 CPU)
@@ -272,6 +271,8 @@ static int modbus_transaction(uint8_t slave, uint8_t func, uint8_t *req, uint16_
         modbus_log_error(slave, func, MODBUS_ERR_TIMEOUT, 0, 0);
         return MODBUS_ERR_TIMEOUT;
     }
+
+    modbus_rx_len = modbus_rs485_rx_end(10);
 
     // 4. 数据校验与解析
 
@@ -330,11 +331,11 @@ static int modbus_transaction(uint8_t slave, uint8_t func, uint8_t *req, uint16_
     if (func == MODBUS_FC_READ_HOLDING_REGS || func == MODBUS_FC_READ_INPUT_REGS ||
         func == MODBUS_FC_READ_COILS || func == MODBUS_FC_READ_DISCRETE_INPUTS) {
         if (modbus_rx_len < 3) {
-             osMutexRelease(modbus_mutex);
-             modbus_status.error_count++;
-             if (slave <= MODBUS_MAX_SLAVE_ID) slave_error_count[slave]++;
+            osMutexRelease(modbus_mutex);
+            modbus_status.error_count++;
+            if (slave <= MODBUS_MAX_SLAVE_ID) slave_error_count[slave]++;
              modbus_log_error(slave, func, MODBUS_ERR_RESP_LEN, 0, modbus_rx_len);
-             return MODBUS_ERR_RESP_LEN;
+            return MODBUS_ERR_RESP_LEN;
         }
         data_ptr = &modbus_rtu_rx_backup[3]; // 跳过 Byte Count
         data_len = modbus_rtu_rx_backup[2];  // 数据长度等于 Byte Count
