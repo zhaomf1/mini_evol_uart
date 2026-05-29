@@ -783,7 +783,7 @@ static void parse_od_board(cJSON *root, SysCtrlCmd_t *cmd) {
     uint16_t od_value[4];
     if(0 != od_ctrl_read_value(od_value))
     {
-        // error = OD_GET_ERROR;
+        error = OD_GET_ERROR;
     }
     od_buffer.od_channel1 = od_value[0];
     od_buffer.od_channel2 = od_value[1];
