@@ -74,6 +74,16 @@ int temp_ctrl_set_timeout(uint16_t second)
     return ret;
 }
 
+/**
+ * @brief 系统复位（出现报警信息后，复位系统）
+ * @return MODBUS_OK 成功，其他错误码
+ */
+int temp_ctrl_system_reset(void)
+{
+    int ret = modbus_write_single_coil(MODBUS_ADDR_TEMP, 0x0001, 0xFF);
+
+    return ret;
+}
 
 /**
  * @brief 初始化温控设备,上电初始化一次

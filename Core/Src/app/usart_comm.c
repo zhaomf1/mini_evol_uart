@@ -823,7 +823,11 @@ static void parse_temperature(cJSON *root, SysCtrlCmd_t *cmd) {
         get_temp_error_info(temp_error_str);
         if (temp_error_str[0] != '\0' && strcmp((char*)temp_error_str, "OK") != 0) {
             error = (const char*)temp_error_str;
-    }
+            //温控系统复位
+            temp_ctrl_system_reset();
+            osDelay(10);
+            temp_ctrl_check_and_update_alarm();
+        }
         send_temp_data(cmd->data.temperature_board.temperature_cmd,cmd->data.temperature_board.temperatureValue,error);
     }   //关闭温控模块
     else if(cmd->data.temperature_board.temperature_cmd == TEMP_CTRL_CLOSE)
@@ -835,7 +839,11 @@ static void parse_temperature(cJSON *root, SysCtrlCmd_t *cmd) {
         get_temp_error_info(temp_error_str);
         if (temp_error_str[0] != '\0' && strcmp((char*)temp_error_str, "OK") != 0) {
             error = (const char*)temp_error_str;
-    }
+            //温控系统复位
+            temp_ctrl_system_reset();
+            osDelay(10);
+            temp_ctrl_check_and_update_alarm();
+        }
         send_temp_data(cmd->data.temperature_board.temperature_cmd,0,error);
     }   //获取当前温度值
     else if(cmd->data.temperature_board.temperature_cmd == TEMP_CTRL_GET)
@@ -849,6 +857,10 @@ static void parse_temperature(cJSON *root, SysCtrlCmd_t *cmd) {
         get_temp_error_info(temp_error_str);
         if (temp_error_str[0] != '\0' && strcmp((char*)temp_error_str, "OK") != 0) {
             error = (const char*)temp_error_str;
+            //温控系统复位
+            temp_ctrl_system_reset();
+            osDelay(10);
+            temp_ctrl_check_and_update_alarm();
         }
         send_temp_data(cmd->data.temperature_board.temperature_cmd,f_temp,error);
     }
