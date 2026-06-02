@@ -80,7 +80,7 @@ const osThreadAttr_t uartCommTask_attributes = {
 
 const osThreadAttr_t timerTask_attributes = {
     .name = "timerTask",
-    .stack_size =256,
+    .stack_size =256 * 4,
     .priority = (osPriority_t)osPriorityNormal,
 };
 

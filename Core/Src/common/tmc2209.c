@@ -102,10 +102,22 @@ int32_t TMC2209_readInt(uint8_t slaveAddress, uint8_t address)
 // 对TMC2209初始化，设定其电流、细分、斩波模式等参数
 void TMC2209_init(uint8_t slaveAddress, uint8_t slaveIRUN, uint8_t slaveMRES)
 {
-    DISENABLE_CONTROL1(); // 先不使能电机，不锁轴
-    DISENABLE_CONTROL2(); // 先不使能电机，不锁轴
-    DISENABLE_CONTROL3();
-    DISENABLE_CONTROL4();
+    if(slaveAddress == 0)
+    {
+        DISENABLE_CONTROL1(); // 先不使能电机，不锁轴
+    }
+    else if(slaveAddress == 1)
+    {
+        DISENABLE_CONTROL2(); // 先不使能电机，不锁轴
+    }
+    else if(slaveAddress == 2)
+    {
+        DISENABLE_CONTROL3(); // 先不使能电机，不锁轴
+    }
+    else if(slaveAddress == 3)
+    {
+        DISENABLE_CONTROL4(); // 先不使能电机，不锁轴
+    }
     volatile uint8_t UART_Address;
     volatile uint8_t MRES;
 
@@ -164,10 +176,21 @@ void TMC2209_init(uint8_t slaveAddress, uint8_t slaveIRUN, uint8_t slaveMRES)
 
     TMC2209_writeInt(UART_Address, TMC2209_TPWMTHRS, 0);
 #endif
-
-    ENABLE_CONTROL1(); // 使能电机，锁轴
-    ENABLE_CONTROL2(); // 使能电机，锁轴
-    ENABLE_CONTROL3();
-    ENABLE_CONTROL4();
+    if(slaveAddress == 0)
+    {
+        ENABLE_CONTROL1(); // 先不使能电机，不锁轴
+    }
+    else if(slaveAddress == 1)
+    {
+        ENABLE_CONTROL2(); // 先不使能电机，不锁轴
+    }
+    else if(slaveAddress == 2)
+    {
+        ENABLE_CONTROL3(); // 先不使能电机，不锁轴
+    }
+    else if(slaveAddress == 3)
+    {
+        ENABLE_CONTROL4(); // 先不使能电机，不锁轴
+    }
     HAL_Delay(100);    // 初始化完，务必延时100毫秒，让内部完成初始化
 }

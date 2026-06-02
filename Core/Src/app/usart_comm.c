@@ -529,39 +529,35 @@ static void parse_step_motor(cJSON *root, SysCtrlCmd_t *cmd) {
     // printf("speed:%ld,step:%ld,mode:%ld\r\n",cmd->data.stepp_motor.speed,cmd->data.stepp_motor.step,cmd->data.stepp_motor.mode);
 
     //判断电机是否异常
-    // if(step_motor_check((StepMotorId_t)cmd->data.stepp_motor.no) == 1)
-    // {
-        switch((StepMotorId_t)cmd->data.stepp_motor.no)
-        {
-            case STEP_MOTOR_PH:
-                TIM1_Init(39);
-				extern void TMC2209_init(uint8_t slaveAddress,uint8_t slaveIRUN,uint8_t slaveMRES);
-                TMC2209_init(0,10,4); 
-                break;
+    //后续判断是否还需要再次初始化
+    switch((StepMotorId_t)cmd->data.stepp_motor.no)
+    {
+        case STEP_MOTOR_PH:
+            TIM1_Init(39);
+    		extern void TMC2209_init(uint8_t slaveAddress,uint8_t slaveIRUN,uint8_t slaveMRES);
+            TMC2209_init(0,10,4); 
+            break;
 
-            case STEP_MOTOR_FEED:
-                TIM2_Init(39);
-                TMC2209_init(1,10,4); 
-                break;
+        case STEP_MOTOR_FEED:
+            TIM2_Init(39);
+            TMC2209_init(1,10,4); 
+            break;
 
-            case STEP_MOTOR_DRAIN:
-                TIM3_Init(39);
-                TMC2209_init(2,10,4); 
-                break;
+        case STEP_MOTOR_DRAIN:
+            TIM3_Init(39);
+            TMC2209_init(2,10,4); 
+            break;
 
-            case STEP_MOTOR_RESERVED:
-                TIM4_Init(255);
-                TMC2209_init(3,10,4); 
-                break;
+        case STEP_MOTOR_RESERVED:
+            TIM4_Init(255);
+            TMC2209_init(3,10,4); 
+            break;
 
-            default:
-                break;
+        default:
+            break;
+    }
 
-        }
-
-        osDelay(20);
-    // }
-
+    osDelay(20);
 
     //控制电机
     if(cmd->data.stepp_motor.mode == MOTOR_MODE_CW)         //正转步数

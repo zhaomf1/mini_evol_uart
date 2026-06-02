@@ -307,7 +307,7 @@ void rgb_switch_ctrl(uint8_t state)
 //设置步进电机步数,运行时间 = 步数/频率 单位ms
 void set_step_motor_step_number(StepMotorId_t id, uint32_t steps)
 {
-    printf("id%d start,time %ld\n",id, steps);
+    // printf("id%d start,time %ld\n",id, steps);
     StartTimer(id, steps);
 }
 
@@ -363,22 +363,25 @@ void TimerTask(void *pvParameters)
                         case STEP_MOTOR_PH: 
                             step_motor_control(STEP_MOTOR_PH, STEP_MOTOR_CMD_SWITCH, STEP_MOTOR_DISABLE);
                             StopTimer(STEP_MOTOR_PH);
-                            printf("id%d stop",STEP_MOTOR_PH);
+                            // printf("id%d stop",STEP_MOTOR_PH);
 
                         break;
                         case STEP_MOTOR_FEED:
                             step_motor_control(STEP_MOTOR_FEED, STEP_MOTOR_CMD_SWITCH, STEP_MOTOR_DISABLE);
                             StopTimer(STEP_MOTOR_FEED);
+                            // printf("id%d stop",STEP_MOTOR_FEED);
 
                         break;
                         case STEP_MOTOR_DRAIN:
                             step_motor_control(STEP_MOTOR_DRAIN, STEP_MOTOR_CMD_SWITCH, STEP_MOTOR_DISABLE);
                             StopTimer(STEP_MOTOR_DRAIN);
+                            // printf("id%d stop",STEP_MOTOR_DRAIN);
 
                         break;
                         case STEP_MOTOR_RESERVED:
                             step_motor_control(STEP_MOTOR_RESERVED, STEP_MOTOR_CMD_SWITCH, STEP_MOTOR_DISABLE);
                             StopTimer(STEP_MOTOR_RESERVED);
+                            // printf("id%d stop",STEP_MOTOR_RESERVED);
 
                         break;
                     }
