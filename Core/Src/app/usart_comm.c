@@ -730,16 +730,18 @@ static void parse_ph_board(cJSON *root, SysCtrlCmd_t *cmd) {
     }
     else if(cmd->data.ph_board.ph_cmd == PH_CMD_CLOSE) //停止PH值设置，终止PH流程
     {
+        error = consume_ph_ctrl_error();
         set_ph_ctrl_stop();
-        send_ph_data( cmd->data.ph_board.ph_cmd, cmd->data.ph_board.phTime,cmd->data.ph_board.phFactor,cmd->data.ph_board.phValue,cmd->data.ph_board.setK,cmd->data.ph_board.setB,NULL);
+        send_ph_data( cmd->data.ph_board.ph_cmd, cmd->data.ph_board.phTime,cmd->data.ph_board.phFactor,cmd->data.ph_board.phValue,cmd->data.ph_board.setK,cmd->data.ph_board.setB,error);
     }
     else if(cmd->data.ph_board.ph_cmd == PH_CMD_GET) //获取当前PH值
     {
         float ph = 0;
         float ph_k = 0;
         float ph_b = 0;
+        error = consume_ph_ctrl_error();
         int ret = ph_ctrl_read_value(&ph);
-        if(ret != 0)
+        if(ret != 0 && error == NULL)
         {
             error = PH_GET_ERROR;
         }
@@ -752,6 +754,7 @@ static void parse_ph_board(cJSON *root, SysCtrlCmd_t *cmd) {
     }
     else if(cmd->data.ph_board.ph_cmd == PH_CMD_SET_KB) //设定K,B标定值
     {
+        error = consume_ph_ctrl_error();
         printf("setK:%f,setB:%f\n",cmd->data.ph_board.setK,cmd->data.ph_board.setB);
         set_ph_kb_value(cmd->data.ph_board.setK,cmd->data.ph_board.setB);
 
@@ -759,7 +762,7 @@ static void parse_ph_board(cJSON *root, SysCtrlCmd_t *cmd) {
         at24c02_save_ph_b(cmd->data.ph_board.setB);
         printf("Saved PH KB to EEPROM\n");
 
-        send_ph_data( cmd->data.ph_board.ph_cmd, cmd->data.ph_board.phTime,cmd->data.ph_board.phFactor,cmd->data.ph_board.phValue,cmd->data.ph_board.setK,cmd->data.ph_board.setB,NULL);
+        send_ph_data( cmd->data.ph_board.ph_cmd, cmd->data.ph_board.phTime,cmd->data.ph_board.phFactor,cmd->data.ph_board.phValue,cmd->data.ph_board.setK,cmd->data.ph_board.setB,error);
     }
 
 }

@@ -13,10 +13,25 @@
 #include "dev_od_ctrl.h"
 #include "modbus_rtu.h"
 #include "i2c.h"
+#include "error_code.h"
 
 TimerItem_t timers[4]; //定时器列表
 PhCtrl_t ph_ctrl;
 PhSetKb_t ph_set_kb;
+
+#define PH_CONTROL_TIMEOUT_MS       (30UL * 60UL * 1000UL)
+#define PH_FAULT_CONFIRM_COUNT      3
+#define PH_ABNORMAL_DELTA           1.0f
+
+static float ph_base_value = 0.0f;          // PH趋势判断基准值，每次开启PH控制后重新采集
+static uint8_t ph_base_is_set = 0;          // 基准值是否已初始化
+static uint8_t ph_abnormal_count = 0;       // 连续反向异常次数
+static uint8_t ph_off_limit_count = 0;      // 连续超出0~14范围次数
+static uint8_t ph_timing_active = 0;        // 只在PH泵需要运行且未达标时启动超时计时
+static TickType_t ph_control_start_tick = 0;
+static const char *ph_pending_error = NULL; // PH控制任务缓存错误，等待下一次上位机查询时带出
+static void ph_reset_fault_state(void);
+static void ph_stop_pump(void);
 static uint8_t g_pwm_is_running = 0;    //PWM是否正在运行
 
 extern TIM_HandleTypeDef htim1,htim2,htim3,htim4;
@@ -396,6 +411,9 @@ void TimerTask(void *pvParameters)
 //启动PH流程控制
 void set_ph_ctrl_start(PhCtrl_t ph_data)
 {
+    // 每次上位机重新开启PH控制，都强制下一次有效PH读数刷新趋势基准值
+    ph_pending_error = NULL;
+    ph_reset_fault_state();
     memcpy(&ph_ctrl, &ph_data, sizeof(PhCtrl_t));
 }
 
@@ -403,11 +421,135 @@ void set_ph_ctrl_start(PhCtrl_t ph_data)
 void set_ph_ctrl_stop(void)
 {
     ph_ctrl.active = false;
+    ph_stop_pump();
+    ph_reset_fault_state();
 }
 
 bool get_ph_ctrl_state(void)
 {
     return ph_ctrl.active;
+}
+
+const char *consume_ph_ctrl_error(void)
+{
+    const char *error = ph_pending_error;
+    ph_pending_error = NULL;
+    return error;
+}
+
+static void ph_reset_fault_state(void)
+{
+    ph_base_value = 0.0f;
+    ph_base_is_set = 0;
+    ph_abnormal_count = 0;
+    ph_off_limit_count = 0;
+    ph_timing_active = 0;
+    ph_control_start_tick = 0;
+}
+
+// 停止PH泵并清除对应的软件定时器，供手动停止、达标和异常保护共用
+static void ph_stop_pump(void)
+{
+    step_motor_control(STEP_MOTOR_PH, STEP_MOTOR_CMD_SWITCH, STEP_MOTOR_DISABLE);
+    StopTimer(STEP_MOTOR_PH);
+}
+
+// PH防错触发后的统一出口：只缓存错误，等待下一次上位机通信时再上报
+static void ph_save_error_and_stop(const char *error)
+{
+    ph_stop_pump();
+    ph_ctrl.active = false;
+    ph_pending_error = error;
+    ph_reset_fault_state();
+}
+
+static uint8_t ph_is_target_reached(float curr_ph)
+{
+    if(ph_ctrl.ph_factor == PH_ACID)
+    {
+        return curr_ph <= ph_ctrl.ph_value;
+    }
+    else if(ph_ctrl.ph_factor == PH_ALKALI)
+    {
+        return curr_ph >= ph_ctrl.ph_value;
+    }
+
+    return 0;
+}
+
+// raw_ph和标定后的curr_ph任一越界都视为本轮异常，连续多次才真正停控
+static uint8_t ph_check_range(float raw_ph, float curr_ph)
+{
+    if(raw_ph <= 0.0f || raw_ph >= 14.0f ||
+       curr_ph <= 0.0f || curr_ph >= 14.0f)
+    {
+        ph_off_limit_count++;
+        if(ph_off_limit_count >= PH_FAULT_CONFIRM_COUNT)
+        {
+            return 1;
+        }
+    }
+    else
+    {
+        ph_off_limit_count = 0;
+    }
+
+    return 0;
+}
+
+// 检测投加方向是否反常：补酸应下降、补碱应上升，偏离基准超过阈值则计数
+static uint8_t ph_check_abnormal_trend(float curr_ph)
+{
+    uint8_t is_abnormal = 0;
+
+    if(!ph_base_is_set)
+    {
+        // 开启PH控制后的第一笔有效数据作为本轮趋势判断基准
+        ph_base_value = curr_ph;
+        ph_base_is_set = 1;
+        ph_abnormal_count = 0;
+        return 0;
+    }
+
+    if(ph_ctrl.ph_factor == PH_ACID)
+    {
+        is_abnormal = (curr_ph - ph_base_value) >= PH_ABNORMAL_DELTA;
+    }
+    else if(ph_ctrl.ph_factor == PH_ALKALI)
+    {
+        is_abnormal = (ph_base_value - curr_ph) >= PH_ABNORMAL_DELTA;
+    }
+
+    if(is_abnormal)
+    {
+        ph_abnormal_count++;
+        return ph_abnormal_count >= PH_FAULT_CONFIRM_COUNT;
+    }
+
+    ph_base_value = curr_ph;
+    ph_abnormal_count = 0;
+    return 0;
+}
+
+// 仅对“未达标且需要运行PH泵”的时间累计超时，达标或无需投加不累计
+static uint8_t ph_check_control_timeout(float curr_ph, uint16_t run_time)
+{
+    TickType_t now;
+
+    if(run_time == 0 || ph_is_target_reached(curr_ph))
+    {
+        return 0;
+    }
+
+    now = xTaskGetTickCount();
+    if(ph_timing_active == 0)
+    {
+        ph_control_start_tick = now;
+        ph_timing_active = 1;
+        return 0;
+    }
+
+    return (now - ph_control_start_tick) > pdMS_TO_TICKS(PH_CONTROL_TIMEOUT_MS);
 }
 
 /*
@@ -442,6 +584,7 @@ void get_ph_kb_value(float *ph_k, float *ph_b)
 //PH流程控制任务函数
 void phControlTask(void *pvParameters)
 {
+    float raw_ph = 0;
     float curr_ph = 0;      //实时获取PH值
     float ph_diff = 0;      //PH值差值
     uint16_t run_time = 0;  //电机运行时间
@@ -451,8 +594,39 @@ void phControlTask(void *pvParameters)
         if(get_ph_ctrl_state()) //PH控制流程启动
         {
             // 1.获取当前PH值
-            ph_ctrl_read_value(&curr_ph);
-            curr_ph = curr_ph * ph_set_kb.set_k + ph_set_kb.set_b;  //标定后的PH值
+            if(ph_ctrl_read_value(&raw_ph) != 0)
+            {
+                ph_save_error_and_stop(PH_GET_ERROR);
+                osDelay(50);
+                continue;
+            }
+
+            curr_ph = raw_ph * ph_set_kb.set_k + ph_set_kb.set_b;  //标定后的PH值
+
+            // 传感器原始值或标定值连续越界时，停止PH控制，避免异常读数驱动泵
+            if(ph_check_range(raw_ph, curr_ph))
+            {
+                ph_save_error_and_stop(PH_VALUE_RANGE_ERROR);
+                osDelay(50);
+                continue;
+            }
+
+            // PH变化方向连续反常时，认为酸碱投加或传感器状态异常
+            if(ph_check_abnormal_trend(curr_ph))
+            {
+                ph_save_error_and_stop(PH_ABNORMAL_TREND_ERROR);
+                osDelay(50);
+                continue;
+            }
+
+            // 已达目标时不再投加，也不累计本轮控制超时
+            if(ph_is_target_reached(curr_ph))
+            {
+                ph_stop_pump();
+                ph_timing_active = 0;
+                osDelay(ph_ctrl.ph_time * 1000);
+                continue;
+            }
             // 2.根据当前PH值，执行电机运行逻辑
             if(ph_ctrl.ph_factor == PH_ACID)    //酸
             {
@@ -462,7 +636,30 @@ void phControlTask(void *pvParameters)
             {
                 ph_diff = ph_ctrl.ph_value - curr_ph;
             }
+            else
+            {
+                ph_stop_pump();
+                osDelay(50);
+                continue;
+            }
             run_time = get_motor_time(ph_diff);
+
+            // 长时间需要投加但仍未达标，认为PH调控失败
+            if(ph_check_control_timeout(curr_ph, run_time))
+            {
+                ph_save_error_and_stop(PH_CONTROL_TIMEOUT_ERROR);
+                osDelay(50);
+                continue;
+            }
+
+            if(run_time == 0)
+            {
+                ph_stop_pump();
+                ph_timing_active = 0;
+                osDelay(ph_ctrl.ph_time * 1000);
+                continue;
+            }
+
             // 3.运行电机
             step_motor_control(STEP_MOTOR_PH,STEP_MOTOR_CMD_SWITCH,STEP_MOTOR_ENABLE);
             step_motor_control(STEP_MOTOR_PH,STEP_MOTOR_CMD_DIR,STEP_MOTOR_FOREWARD);

@@ -148,6 +148,8 @@ typedef enum{
 extern osMessageQueueId_t uartRxQueueHandle;
 
 void uart_comm_task(void *argument);
+char* send_ph_data(uint8_t ph_cmd, uint8_t phTime, uint8_t phFactor,
+                   float phValue, float setK, float setB, const char *error);
 
 
 #endif // __USART_COMM_H

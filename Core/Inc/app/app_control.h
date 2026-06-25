@@ -144,6 +144,7 @@ void get_ph_kb_value(float *ph_k, float *ph_b);
 //PH流程控制
 void set_ph_ctrl_start(PhCtrl_t ph_data);
 void set_ph_ctrl_stop(void);
+const char *consume_ph_ctrl_error(void);
 void phControlTask(void *pvParameters);//ph流程任务
 HAL_StatusTypeDef at24c02_save_ph_k(float k);
 HAL_StatusTypeDef at24c02_save_ph_b(float b);

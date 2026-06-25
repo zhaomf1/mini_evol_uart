@@ -64,3 +64,7 @@ mini_evol\app_control.o: ..\Core\Inc\app\dev_bldc_ctrl.h
 mini_evol\app_control.o: ..\Core\Inc\app\dev_od_ctrl.h
 mini_evol\app_control.o: ..\Core\Inc\common\modbus_rtu.h
 mini_evol\app_control.o: ..\Core\Inc\peripheral\i2c.h
+mini_evol\app_control.o: ..\Core\Inc\app\usart_comm.h
+mini_evol\app_control.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h
+mini_evol\app_control.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h
+mini_evol\app_control.o: ..\Core\Inc\app\error_code.h

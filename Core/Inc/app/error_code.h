@@ -10,6 +10,9 @@
 #define STEP_MOTOR_CLOSE_ERROR              "step motor close error"
 
 #define PH_GET_ERROR                        "ph get error"
+#define PH_VALUE_RANGE_ERROR                "ph value range error"
+#define PH_CONTROL_TIMEOUT_ERROR            "ph control timeout error"
+#define PH_ABNORMAL_TREND_ERROR             "ph abnormal trend error"
 
 #define OD_GET_ERROR                        "od get error"
 
