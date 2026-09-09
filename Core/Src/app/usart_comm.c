@@ -475,7 +475,22 @@ static void parse_bldc_motor(cJSON *root, SysCtrlCmd_t *cmd) {
                 {
                     error = BLDC_SET_SPEED_ERROR;
                 }
+                if(0 != (bldc_ctrl_set_dir(MODBUS_ADDR_TRAIN_BLDC, 0)))
+                {
+                    error = BLDC_SET_SPEED_ERROR;
+                }
 
+            }
+            else if(cmd->data.bldc_motor.mode == MOTOR_MODE_CCW_KEEP)
+            {
+                if(0 != bldc_ctrl_set_speed(MODBUS_ADDR_TRAIN_BLDC,cmd->data.bldc_motor.speed))
+                {
+                    error = BLDC_SET_SPEED_ERROR;
+                }
+                if(0 != (bldc_ctrl_set_dir(MODBUS_ADDR_TRAIN_BLDC, 1)))
+                {
+                    error = BLDC_SET_SPEED_ERROR;
+                }
             }
             else if(cmd->data.bldc_motor.mode == MOTOR_MODE_STOP)
             {
@@ -492,6 +507,21 @@ static void parse_bldc_motor(cJSON *root, SysCtrlCmd_t *cmd) {
             if(cmd->data.bldc_motor.mode == MOTOR_MODE_CW_KEEP)
             {
                 if(0 != bldc_ctrl_set_speed(MODBUS_ADDR_FEEDING_BLDC,cmd->data.bldc_motor.speed))
+                {
+                    error = BLDC_SET_SPEED_ERROR;
+                }
+                if(0 != (bldc_ctrl_set_dir(MODBUS_ADDR_FEEDING_BLDC, 0)))
+                {
+                    error = BLDC_SET_SPEED_ERROR;
+                }
+            }
+            else if(cmd->data.bldc_motor.mode == MOTOR_MODE_CCW_KEEP)
+            {
+                if(0 != bldc_ctrl_set_speed(MODBUS_ADDR_FEEDING_BLDC,cmd->data.bldc_motor.speed))
+                {
+                    error = BLDC_SET_SPEED_ERROR;
+                }
+                if(0 != (bldc_ctrl_set_dir(MODBUS_ADDR_FEEDING_BLDC, 1)))
                 {
                     error = BLDC_SET_SPEED_ERROR;
                 }

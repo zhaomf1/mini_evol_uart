@@ -40,7 +40,7 @@ int bldc_ctrl_set_protocol_trans(uint16_t trans)
  * @param dir 00正转 01反转
  * @return MODBUS_OK 成功，其他错误码
  */
-int bldc_ctrl_set_dir(uint16_t dir)
+int bldc_ctrl_set_dir_init(uint16_t dir)
 {
     int ret = modbus_write_single_register(MODBUS_ADDR_TRAIN_BLDC, 0x006D, dir);
     osDelay(50);
@@ -103,6 +103,17 @@ int bldc_ctrl_set_speed(ModbusAddr_t bldc_addr,uint16_t speed)
     return ret;
 }
 
+/**
+ * @brief 设置电机旋转方向  
+ * @param speed 电机转速 0-60000
+ * @return MODBUS_OK 成功，其他错误码
+ */
+int bldc_ctrl_set_dir(ModbusAddr_t bldc_addr,uint16_t dir)
+{
+    int ret = modbus_write_single_register(bldc_addr, 0x006D, dir);
+    printf("dir ret = %02x\n",ret);
+    return ret;
+}
 
 /**
  * @brief 直流无刷电机初始化，上电初始化一次
@@ -123,7 +134,7 @@ int dev_bldc_init(void)
     }
     osDelay(10);
     
-    if (bldc_ctrl_set_dir(0) != 0)
+    if (bldc_ctrl_set_dir_init(0) != 0)
     {
         ret = -1;
     }
