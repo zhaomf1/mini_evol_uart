@@ -25,6 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "pwm_uart.h"
 
 /* USER CODE END Includes */
 
@@ -117,6 +118,7 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
+    PWM_Uart1Process();
     osDelay(1);
   }
   /* USER CODE END StartDefaultTask */

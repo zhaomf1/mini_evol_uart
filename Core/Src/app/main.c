@@ -31,6 +31,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "pwm_uart.h"
 
 /* USER CODE END Includes */
 
@@ -98,7 +99,7 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_I2C1_Init();
-  MX_IWDG_Init();
+//  MX_IWDG_Init();
   // MX_SDIO_SD_Init();
   MX_SPI1_Init();
   MX_SPI2_Init();
@@ -112,6 +113,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
+  PWM_Uart1Init();
   printf("system start\n");
 
   /* USER CODE END 2 */
