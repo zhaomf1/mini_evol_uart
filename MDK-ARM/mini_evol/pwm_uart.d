@@ -1,6 +1,5 @@
 mini_evol\pwm_uart.o: ../Core/Src/app/pwm_uart.c
 mini_evol\pwm_uart.o: ../Core/Inc/app/pwm_uart.h
-mini_evol\pwm_uart.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 mini_evol\pwm_uart.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 mini_evol\pwm_uart.o: ../Core/Inc/app/main.h
 mini_evol\pwm_uart.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
@@ -40,7 +39,6 @@ mini_evol\pwm_uart.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h
 mini_evol\pwm_uart.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 mini_evol\pwm_uart.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 mini_evol\pwm_uart.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
-mini_evol\pwm_uart.o: ../Core/Inc/app/pwm_command.h
 mini_evol\pwm_uart.o: ../Core/Inc/app/pwm_output.h
 mini_evol\pwm_uart.o: ../Core/Inc/app/pwm_timing_marker.h
 mini_evol\pwm_uart.o: ../Core/Inc/peripheral/usart.h

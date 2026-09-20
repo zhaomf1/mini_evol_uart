@@ -4,8 +4,10 @@
 #include <stdint.h>
 
 void PWM_OutputInit(void);
+void PWM_OutputPoll(void);
 uint8_t PWM_OutputBusy(void);
 /* Returns the actual frequency, or zero if invalid/busy. */
 uint32_t PWM_OutputStart(uint32_t frequency_hz, uint32_t pulse_count);
+uint32_t PWM_OutputStartContinuous(uint32_t frequency_hz);
 
 #endif

@@ -3,6 +3,9 @@
 #include "tim.h"
 #include "pwm_timer_config.h"
 
+/* 硬件脉冲突发发生器。TIM4 在 PD13（CH2）上产生 PWM；TIM2 是不接引脚的 32 位定时器，
+ * 对 TIM4 溢出事件计数，数满目标周期数后把 TIM4 门控关闭，因此突发由硬件自行结束，
+ * 无需中断或 DMA。 */
 static uint8_t pwm_active;
 
 void PWM_OutputInit(void)
@@ -28,12 +31,21 @@ uint8_t PWM_OutputBusy(void)
     return (uint8_t)((pwm_active != 0U) && (TIM2->CNT < TIM2->CCR2));
 }
 
+void PWM_OutputPoll(void)
+{
+    if ((pwm_active != 0U) && (TIM2->CCR2 != 0xFFFFFFFFU) &&
+        (TIM2->CNT >= TIM2->CCR2))
+    {
+        PWM_OutputInit();
+    }
+}
+
 uint32_t PWM_OutputStart(uint32_t frequency_hz, uint32_t pulse_count)
 {
     PWM_TimerConfig_t config;
     volatile uint32_t settle;
 
-    if ((pulse_count == 0U) || (pulse_count > 1000000U) ||
+    if ((pulse_count == 0U) ||
         (PWM_TimerConfigGet(frequency_hz, &config) != PWM_TIMER_CONFIG_OK) ||
         (PWM_OutputBusy() != 0U))
     {
@@ -49,6 +61,8 @@ uint32_t PWM_OutputStart(uint32_t frequency_hz, uint32_t pulse_count)
     TIM4->EGR = TIM_EGR_UG;
     /* PWM2: low first, high second, falling edge at overflow.
        Counting overflow therefore counts COMPLETE high pulses. */
+    /* HAL's TIM_OCMODE_* constants describe the CH1 field; shift by 8
+       to place the same mode in the CH2 field. */
     TIM4->CCMR1 = (TIM_OCMODE_PWM2 << 8U) | TIM_CCMR1_OC2PE;
 
     TIM2->CR2 = TIM_TRGO_OC2REF;
@@ -63,7 +77,9 @@ uint32_t PWM_OutputStart(uint32_t frequency_hz, uint32_t pulse_count)
        RM0090 table 97: TIM2 ITR3 <- TIM4; TIM4 ITR1 <- TIM2.
        Keep MSM disabled: each trigger has its own independent role. */
     TIM2->SMCR = TIM_TS_ITR3;
-    TIM4->SMCR = TIM_TS_ITR1;
+    /* TIM4 must run from its own internal clock.  TIM2 only observes its
+       update events; gating TIM4 from TIM2 would create a startup loop. */
+    TIM4->SMCR = 0U;
     TIM4->CR2 = TIM_TRGO_UPDATE;
     /* Let the initialization UG pulse and trigger muxes settle while
        both counters are disabled, so UG is never counted as a pulse. */
@@ -75,15 +91,24 @@ uint32_t PWM_OutputStart(uint32_t frequency_hz, uint32_t pulse_count)
     TIM2->SR = 0U;
     TIM4->SR = 0U;
     TIM2->SMCR |= TIM_SLAVEMODE_EXTERNAL1;
-    TIM4->SMCR |= TIM_SLAVEMODE_GATED;
     pwm_active = 1U;
     TIM2->CR1 = TIM_CR1_CEN;
     __DSB();
-    TIM4->CR1 = TIM_CR1_CEN;
+    /* Keep the direct register setup, but let HAL perform the channel/timer
+       enable bookkeeping as well. */
+    (void)HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
+    TIM4->CR1 |= TIM_CR1_CEN;
     /* At the Nth overflow, PD13 first falls LOW, TIM2 then reaches N,
        OC2REF closes the gate. TIM4 freezes in its low half-period.
        At 100 kHz that half-period is 5 us, providing ample time for
        the internal trigger synchronization. No stop ISR/DMA is used.
        CEN intentionally remains set after completion; Busy reads CNT. */
     return config.actual_frequency_hz;
+}
+
+uint32_t PWM_OutputStartContinuous(uint32_t frequency_hz)
+{
+    /* A 32-bit terminal count effectively leaves the hardware running
+       continuously for the supported 100 kHz output lifetime. */
+    return PWM_OutputStart(frequency_hz, 0xFFFFFFFFU);
 }
