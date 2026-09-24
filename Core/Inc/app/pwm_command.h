@@ -5,9 +5,9 @@
 
 typedef enum
 {
-    PWM_COMMAND_OK = 0,
-    PWM_COMMAND_FORMAT_ERROR,
-    PWM_COMMAND_RANGE_ERROR
+    PWM_COMMAND_OK = 0,         //成功
+    PWM_COMMAND_FORMAT_ERROR,   //格式错误
+    PWM_COMMAND_RANGE_ERROR     //范围错误
 } PWM_CommandStatus_t;
 
 typedef struct
