@@ -19,7 +19,7 @@ TimerItem_t timers[4]; //定时器列表
 PhCtrl_t ph_ctrl;
 PhSetKb_t ph_set_kb;
 
-#define PH_CONTROL_TIMEOUT_MS       (30UL * 60UL * 1000UL)
+#define PH_CONTROL_TIMEOUT_MS       (60UL * 60UL * 1000UL)
 #define PH_FAULT_CONFIRM_COUNT      3
 #define PH_ABNORMAL_DELTA           1.0f
 
